@@ -7,6 +7,7 @@
 #include <WiFi.h>
 #include "nvs.h"
 #include "nvs_flash.h"
+#include <esp_err.h>
 
 #define TFT_SCLK D8
 // not really, the pin is not connected. But the library seems to fall apart without it.
@@ -26,6 +27,40 @@ SPIClass spi = SPIClass(FSPI);
 GxEPD2_BW<GxEPD2_426_GDEQ0426T82Mod, GxEPD2_426_GDEQ0426T82Mod::HEIGHT> display(GxEPD2_426_GDEQ0426T82Mod(
   TFT_CS, TFT_DC, TFT_RST, TFT_BUSY)); // GDEQ0426T82 480x800, SSD1677 (P426010-MF1-A)
 
+void display_status(const char* status, esp_err_t err = ESP_OK) {
+  display.setFont(&FreeMonoBold9pt7b);
+  display.setTextColor(GxEPD_BLACK);
+
+  // Clear the display
+  display.fillScreen(GxEPD_WHITE);
+
+  // Calculate text position for center alignment
+  int16_t tbx, tby;
+  uint16_t tbw, tbh;
+  display.getTextBounds(status, 0, 0, &tbx, &tby, &tbw, &tbh);
+  uint16_t x = ((display.width() - tbw) / 2) - tbx;
+  uint16_t y = display.height() / 2;
+
+  // Display the status
+  display.setCursor(x, y);
+  display.print(status);
+
+  // If there's an error, display the error code and description
+  if (err != ESP_OK) {
+    char err_msg[64];
+    snprintf(err_msg, sizeof(err_msg), "Error: 0x%x\n%s", err, esp_err_to_name(err));
+
+    display.getTextBounds(err_msg, 0, 0, &tbx, &tby, &tbw, &tbh);
+    x = ((display.width() - tbw) / 2) - tbx;
+    y += tbh + 10; // Add some spacing between messages
+
+    display.setCursor(x, y);
+    display.print(err_msg);
+  }
+
+  display.display(true);
+}
+
 void init_wifi() {
   // Initialize NVS
   esp_err_t ret = nvs_flash_init();
@@ -33,13 +68,17 @@ void init_wifi() {
     ESP_ERROR_CHECK(nvs_flash_erase());
     ret = nvs_flash_init();
   }
-  ESP_ERROR_CHECK(ret);
+  if (ret != ESP_OK) {
+    display_status("NVS Init Failed", ret);
+    ESP_ERROR_CHECK(ret);
+    return;
+  }
 
   // Open NVS
   nvs_handle_t nvs_handle;
   ret = nvs_open("storage", NVS_READONLY, &nvs_handle);
   if (ret != ESP_OK) {
-    Serial.println("Error opening NVS");
+    display_status("NVS Open Failed", ret);
     return;
   }
 
@@ -51,14 +90,14 @@ void init_wifi() {
 
   ret = nvs_get_str(nvs_handle, "wifi_ssid", wifi_ssid, &ssid_size);
   if (ret != ESP_OK) {
-    Serial.println("Error reading WiFi SSID from NVS");
+    display_status("WiFi SSID Read Failed", ret);
     nvs_close(nvs_handle);
     return;
   }
 
   ret = nvs_get_str(nvs_handle, "wifi_password", wifi_password, &password_size);
   if (ret != ESP_OK) {
-    Serial.println("Error reading WiFi password from NVS");
+    display_status("WiFi Password Read Failed", ret);
     nvs_close(nvs_handle);
     return;
   }
@@ -69,19 +108,29 @@ void init_wifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(wifi_ssid, wifi_password);
   
-  // Wait for connection
-  Serial.begin(115200);
-  Serial.println("Connecting to WiFi...");
-  
+  // Wait for connection with visual feedback
+  int dots = 0;
+  int iteration = 0;
   while (WiFi.status() != WL_CONNECTED) {
+    if (iteration % 20 == 0) {
+      dots = (dots + 1) % 4;
+      char status[32];
+      snprintf(status, sizeof(status), "Connecting%s %d", "...." + (3 - dots), WiFi.status());
+      display_status(status);
+    }
+    iteration++;
     delay(500);
-    Serial.print(".");
+
+    if (dots > 3) {
+      display_status("Failed to connect to WiFi");
+      return;
+    }
   }
   
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  // Show final status
+  char ip_status[64];
+  snprintf(ip_status, sizeof(ip_status), "Connected!\nIP: %s", WiFi.localIP().toString().c_str());
+  display_status(ip_status);
 }
 
 void init_epaper() {
@@ -98,8 +147,8 @@ void init_epaper() {
 
 void setup()
 {
-  init_wifi();
   init_epaper();
+  init_wifi();
 }
 
 void display_qrcode(esp_qrcode_handle_t qrcode) {
@@ -133,6 +182,7 @@ const char HelloWorld[] = "Hello World!";
 void loop() {
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
+  delay(10000);
   
   draw_qrcode(HelloWorld);
 

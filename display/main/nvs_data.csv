@@ -1,3 +1,4 @@
 key,type,encoding,value
+storage,namespace,,
 wifi_ssid,data,string,my_wifi_ssid
 wifi_password,data,string,my_wifi_password 
