@@ -3,15 +3,16 @@
 #include <GxEPD2_BW.h>
 #include <GxEPD2_426_GDEQ0426T82Mod.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
-#include <Fonts/FreeSansBold24pt7b.h>
 #include <qrcode.h>
 #include <WiFi.h>
 #include "nvs.h"
 #include "nvs_flash.h"
 #include <esp_err.h>
 #include <esp_system.h>
-#include "time.h"
-#include "esp_sntp.h"
+#include <time.h>
+#include <esp_sntp.h>
+
+#include "Fonts/NotoSansBold80pt7b.h"
 
 #define TFT_SCLK D8
 // not really, the pin is not connected. But the library seems to fall apart without it.
@@ -208,8 +209,8 @@ void printLocalTime() {
   // Clear the display
   display.fillScreen(GxEPD_WHITE);
 
-  // Set the font to FreeSansBold24pt7b
-  display.setFont(&FreeSansBold24pt7b);
+  // Set the font to NotoSans_Bold80pt7b
+  display.setFont(&NotoSans_Bold80pt7b);
   display.setTextColor(GxEPD_BLACK);
 
   // Format time string
