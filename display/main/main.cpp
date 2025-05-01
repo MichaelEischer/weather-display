@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "pins_arduino.h"
 #include <GxEPD2_BW.h>
+#include <GxEPD2_426_GDEQ0426T82Mod.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
 
 
@@ -19,7 +20,7 @@
 // Create a global SPI instance
 SPIClass spi = SPIClass(FSPI);
 
-GxEPD2_BW<GxEPD2_426_GDEQ0426T82, GxEPD2_426_GDEQ0426T82::HEIGHT> display(GxEPD2_426_GDEQ0426T82(
+GxEPD2_BW<GxEPD2_426_GDEQ0426T82Mod, GxEPD2_426_GDEQ0426T82Mod::HEIGHT> display(GxEPD2_426_GDEQ0426T82Mod(
   TFT_CS, TFT_DC, TFT_RST, TFT_BUSY)); // GDEQ0426T82 480x800, SSD1677 (P426010-MF1-A)
 
 void setup()

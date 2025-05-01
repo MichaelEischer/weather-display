@@ -105,8 +105,8 @@ idf_component_register(SRCS
     # "code/src/epd7c/GxEPD2_565c.cpp"
 
     # add customized display driver with lots of cleanups compared to the original
-    "src/GxEPD2_426_GDEQ0426T82.cpp"
-                       INCLUDE_DIRS "code/src"
+    "src/GxEPD2_426_GDEQ0426T82Mod.cpp"
+                       INCLUDE_DIRS "code/src" "src"
                        REQUIRES arduino-esp32 Adafruit_GFX_Library)
 
 project(GxEPD2) 
