@@ -3,12 +3,15 @@
 #include <GxEPD2_BW.h>
 #include <GxEPD2_426_GDEQ0426T82Mod.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
+#include <Fonts/FreeSansBold24pt7b.h>
 #include <qrcode.h>
 #include <WiFi.h>
 #include "nvs.h"
 #include "nvs_flash.h"
 #include <esp_err.h>
 #include <esp_system.h>
+#include "time.h"
+#include "esp_sntp.h"
 
 #define TFT_SCLK D8
 // not really, the pin is not connected. But the library seems to fall apart without it.
@@ -27,6 +30,11 @@ SPIClass spi = SPIClass(FSPI);
 
 GxEPD2_BW<GxEPD2_426_GDEQ0426T82Mod, GxEPD2_426_GDEQ0426T82Mod::HEIGHT> display(GxEPD2_426_GDEQ0426T82Mod(
   TFT_CS, TFT_DC, TFT_RST, TFT_BUSY)); // GDEQ0426T82 480x800, SSD1677 (P426010-MF1-A)
+
+const char *ntpServer1 = "0.de.pool.ntp.org";
+const char *ntpServer2 = "1.de.pool.ntp.org";
+const long gmtOffset_sec = 3600;
+const int daylightOffset_sec = 3600;
 
 void display_status(const char* status, esp_err_t err = ESP_OK) {
   display.setFont(&FreeMonoBold9pt7b);
@@ -118,16 +126,16 @@ void init_wifi() {
   int dots = 0;
   int iteration = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    if (iteration % 20 == 0) {
+    if (iteration % 100 == 0) {
       dots = (dots + 1) % 4;
       char status[32];
-      snprintf(status, sizeof(status), "Connecting%s %d", "...." + (3 - dots), WiFi.status());
+      snprintf(status, sizeof(status), "Connecting%s", "...." + (3 - dots));
       display_status(status);
     }
     iteration++;
-    delay(500);
+    delay(100);
 
-    if (dots > 3) {
+    if (dots > 3 || WiFi.status() == WL_CONNECTED || WiFi.status() == WL_CONNECT_FAILED) {
       display_status("Failed to connect to WiFi");
       delay(10000);
       return;
@@ -138,7 +146,7 @@ void init_wifi() {
   char ip_status[64];
   snprintf(ip_status, sizeof(ip_status), "Connected!\nIP: %s", WiFi.localIP().toString().c_str());
   display_status(ip_status);
-  delay(3000);
+  delay(2000);
 }
 
 void init_epaper() {
@@ -153,10 +161,16 @@ void init_epaper() {
   display.hibernate();
 }
 
+void init_ntp() {
+  // Configure NTP
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
+}
+
 void setup()
 {
   init_epaper();
   init_wifi();
+  init_ntp();
 }
 
 void display_qrcode(esp_qrcode_handle_t qrcode) {
@@ -185,29 +199,65 @@ void draw_qrcode(const char* text) {
   esp_qrcode_generate(&cfg, text);
 }
 
-const char HelloWorld[] = "Hello World!";
+void printLocalTime() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    return;
+  }
 
-void loop() {
+  // Clear the display
   display.fillScreen(GxEPD_WHITE);
-  display.setFont(&FreeMonoBold9pt7b);
+
+  // Set the font to FreeSansBold24pt7b
+  display.setFont(&FreeSansBold24pt7b);
   display.setTextColor(GxEPD_BLACK);
 
-  int16_t tbx, tby; uint16_t tbw, tbh;
-  display.getTextBounds(HelloWorld, 0, 0, &tbx, &tby, &tbw, &tbh);
-  // center the bounding box by transposition of the origin:
+  // Format time string
+  char timeStr[16];
+  strftime(timeStr, sizeof(timeStr), "%H:%M", &timeinfo);
+
+  // Calculate text position for center alignment
+  int16_t tbx, tby;
+  uint16_t tbw, tbh;
+  display.getTextBounds(timeStr, 0, 0, &tbx, &tby, &tbw, &tbh);
   uint16_t x = ((display.width() - tbw) / 2) - tbx;
-  // uint16_t y = ((display.height() - tbh) / 2) - tby;
+  uint16_t y = display.height() / 2;
 
-  for (int i = 0 ; i < 50; i++) {
-    display.fillRect(0, 0, display.width(), display.height()/2, GxEPD_WHITE);
-    display.setCursor(x, i * 10 + 20);
-    display.print(HelloWorld);
-    display.display(true);
-    display.hibernate();
+  // Display the time
+  display.setCursor(x, y);
+  display.print(timeStr);
 
-    delay(10000);
+  // Update the display
+  display.display(true);
+}
+
+void loop() {
+  time_t last_update = 0;
+  bool time_available = true;
+  
+  while(true) {
+    struct tm timeinfo;
+  
+    if (getLocalTime(&timeinfo)) {
+      time_available = true;
+      time_t now = mktime(&timeinfo);
+      
+      // Update if it's a new minute or if we haven't updated yet
+      if (last_update == 0 || (now / 60) != (last_update / 60)) {
+        printLocalTime();
+        display.hibernate();
+        last_update = now;
+      }
+    } else if (time_available) {
+      display_status("No time available");
+      time_available = false;
+    }
+
+    delay(10); // Check with high frequency
   }
-};
+}
+
+// const char HelloWorld[] = "Hello World!";
 
 extern "C" void app_main()
 {
@@ -215,8 +265,5 @@ extern "C" void app_main()
   setup();
 
   // draw_qrcode(HelloWorld);
-
-  while(true){
-    loop();
-  }
+  loop();
 }
