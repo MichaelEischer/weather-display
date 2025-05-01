@@ -3,7 +3,7 @@
 #include <GxEPD2_BW.h>
 #include <GxEPD2_426_GDEQ0426T82Mod.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
-
+#include <qrcode.h>
 
 #define TFT_SCLK D8
 // not really, the pin is not connected. But the library seems to fall apart without it.
@@ -34,26 +34,54 @@ void setup()
   display.init(115200, true, 10, false);
 
   display.init(115200, true);
+  display.setRotation(3);
   display.clearScreen(GxEPD_WHITE);
+  display.fillScreen(GxEPD_WHITE);
   display.hibernate();
+}
+
+void display_qrcode(esp_qrcode_handle_t qrcode) {
+  int size = esp_qrcode_get_size(qrcode);
+  int border = 2;
+
+  int pixel_size = 4;
+  int offset_x = display.width() / 2 - size / 2 * pixel_size;
+  int offset_y = display.height() / 2 + 10*pixel_size;
+
+  for (int y = -border; y < size + border; y++) {
+      for (int x = -border; x < size + border; x++) {
+          uint16_t color = esp_qrcode_get_module(qrcode, x, y) ? GxEPD_BLACK : GxEPD_WHITE;
+          display.fillRect(x * pixel_size + offset_x, y * pixel_size + offset_y, pixel_size, pixel_size, color);
+      }
+  }
+  display.display(true);
+}
+
+void draw_qrcode(const char* text) {
+  esp_qrcode_config_t cfg = {
+    .display_func = display_qrcode,
+    .max_qrcode_version = 10,
+    .qrcode_ecc_level = ESP_QRCODE_ECC_LOW,
+  };
+  esp_qrcode_generate(&cfg, text);
 }
 
 const char HelloWorld[] = "Hello World!";
 
 void loop() {
-  display.setRotation(3);
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
-  display.setFullWindow();
   
+  draw_qrcode(HelloWorld);
+
   int16_t tbx, tby; uint16_t tbw, tbh;
   display.getTextBounds(HelloWorld, 0, 0, &tbx, &tby, &tbw, &tbh);
   // center the bounding box by transposition of the origin:
   uint16_t x = ((display.width() - tbw) / 2) - tbx;
-  uint16_t y = ((display.height() - tbh) / 2) - tby;
+  // uint16_t y = ((display.height() - tbh) / 2) - tby;
 
   for (int i = 0 ; i < 50; i++) {
-    display.fillScreen(GxEPD_WHITE);
+    display.fillRect(0, 0, display.width(), display.height()/2, GxEPD_WHITE);
     display.setCursor(x, i * 10 + 20);
     display.print(HelloWorld);
     display.display(true);
