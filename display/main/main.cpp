@@ -8,6 +8,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include <esp_err.h>
+#include <esp_system.h>
 
 #define TFT_SCLK D8
 // not really, the pin is not connected. But the library seems to fall apart without it.
@@ -61,6 +62,12 @@ void display_status(const char* status, esp_err_t err = ESP_OK) {
   display.display(true);
 }
 
+void fatal_error() {
+  while (true) {
+    delay(1000);
+  }
+}
+
 void init_wifi() {
   // Initialize NVS
   esp_err_t ret = nvs_flash_init();
@@ -70,8 +77,7 @@ void init_wifi() {
   }
   if (ret != ESP_OK) {
     display_status("NVS Init Failed", ret);
-    ESP_ERROR_CHECK(ret);
-    return;
+    fatal_error();
   }
 
   // Open NVS
@@ -79,7 +85,7 @@ void init_wifi() {
   ret = nvs_open("storage", NVS_READONLY, &nvs_handle);
   if (ret != ESP_OK) {
     display_status("NVS Open Failed", ret);
-    return;
+    fatal_error();
   }
 
   // Read WiFi credentials from NVS
@@ -90,16 +96,16 @@ void init_wifi() {
 
   ret = nvs_get_str(nvs_handle, "wifi_ssid", wifi_ssid, &ssid_size);
   if (ret != ESP_OK) {
-    display_status("WiFi SSID Read Failed", ret);
     nvs_close(nvs_handle);
-    return;
+    display_status("WiFi SSID Read Failed", ret);
+    fatal_error();
   }
 
   ret = nvs_get_str(nvs_handle, "wifi_password", wifi_password, &password_size);
   if (ret != ESP_OK) {
-    display_status("WiFi Password Read Failed", ret);
     nvs_close(nvs_handle);
-    return;
+    display_status("WiFi Password Read Failed", ret);
+    fatal_error();
   }
 
   nvs_close(nvs_handle);
@@ -123,6 +129,7 @@ void init_wifi() {
 
     if (dots > 3) {
       display_status("Failed to connect to WiFi");
+      delay(10000);
       return;
     }
   }
@@ -131,6 +138,7 @@ void init_wifi() {
   char ip_status[64];
   snprintf(ip_status, sizeof(ip_status), "Connected!\nIP: %s", WiFi.localIP().toString().c_str());
   display_status(ip_status);
+  delay(3000);
 }
 
 void init_epaper() {
@@ -180,11 +188,9 @@ void draw_qrcode(const char* text) {
 const char HelloWorld[] = "Hello World!";
 
 void loop() {
+  display.fillScreen(GxEPD_WHITE);
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
-  delay(10000);
-  
-  draw_qrcode(HelloWorld);
 
   int16_t tbx, tby; uint16_t tbw, tbh;
   display.getTextBounds(HelloWorld, 0, 0, &tbx, &tby, &tbw, &tbh);
@@ -206,13 +212,11 @@ void loop() {
 extern "C" void app_main()
 {
   initArduino();
-
   setup();
 
-  // Arduino-like loop()
+  // draw_qrcode(HelloWorld);
+
   while(true){
     loop();
   }
-
-  // WARNING: if program reaches end of function app_main() the MCU will restart.
 }
