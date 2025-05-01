@@ -1,0 +1,3 @@
+key,type,encoding,value
+wifi_ssid,data,string,my_wifi_ssid
+wifi_password,data,string,my_wifi_password 
