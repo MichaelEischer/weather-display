@@ -135,7 +135,7 @@ void init_wifi() {
     iteration++;
     delay(100);
 
-    if (dots > 3 || WiFi.status() == WL_CONNECTED || WiFi.status() == WL_CONNECT_FAILED) {
+    if (dots > 3 || WiFi.status() == WL_NO_SSID_AVAIL || WiFi.status() == WL_CONNECT_FAILED) {
       display_status("Failed to connect to WiFi");
       delay(10000);
       return;
