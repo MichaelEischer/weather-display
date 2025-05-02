@@ -32,6 +32,7 @@ export function renderDashboardHtml(sensorData: any): string {
             background-color: white;
             padding: 20px;
             box-sizing: border-box;
+            font-size: 16px;
           }
           .room {
             background-color: white;
@@ -40,27 +41,32 @@ export function renderDashboardHtml(sensorData: any): string {
             margin-bottom: 15px;
           }
           .room-title {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             color: black;
           }
           .sensor-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            align-items: center;
           }
           .sensor-label {
             color: black;
+            font-size: 18px;
+            font-weight: 600;
           }
           .sensor-value {
             font-weight: bold;
             color: black;
+            font-size: 32px;
           }
           h1 {
             text-align: center;
             color: black;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 32px;
           }
         </style>
       </head>
