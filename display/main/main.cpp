@@ -121,6 +121,7 @@ Error ClockDisplay::initWifi() {
     WiFiManager wifiManager;
     wifiManager.setConnectRetries(3);
     wifiManager.setConfigPortalTimeout(300);
+    wifiManager.setShowInfoUpdate(false);
     wifiManager.setCountry("DE");
     wifiManager.setAPCallback([this](WiFiManager* wm) { this->configModeCallback(wm); });
     
