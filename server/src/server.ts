@@ -31,7 +31,10 @@ app.get('/dashboard.bits', async (req, res) => {
   const data = await fetchSensorData();
   const html = renderDashboardHtml(data);
 
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: process.env.PUPPETEER_ARGS?.split(' ') || [],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+  });
   const page = await browser.newPage();
   await page.setViewport({ width: 480, height: 800 });
   await page.setContent(html, { waitUntil: 'networkidle0' });
@@ -75,4 +78,13 @@ app.get('/dashboard.bits', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  console.log('Shutting down server...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });

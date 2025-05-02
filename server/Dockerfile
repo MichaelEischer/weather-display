@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Set Chrome binary location
+# Set Chrome binary location and flags
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_ARGS="--no-sandbox --disable-setuid-sandbox"
 
 WORKDIR /app
 
@@ -30,6 +31,15 @@ COPY . .
 
 # Build TypeScript
 RUN npx tsc
+
+# Create a non-root user
+RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
+    && mkdir -p /home/pptruser/Downloads \
+    && chown -R pptruser:pptruser /home/pptruser \
+    && chown -R pptruser:pptruser /app
+
+# Run as non-root user
+USER pptruser
 
 # Expose the port
 EXPOSE 3000
