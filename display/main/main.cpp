@@ -266,8 +266,7 @@ void ClockDisplay::update() {
             time_t now = mktime(&timeinfo);
             
             if (lastUpdate_ == 0 || (now / 60) != (lastUpdate_ / 60)) {
-                printLocalTime();
-                display_.hibernate();
+                fetchAndDisplayDashboard();
                 lastUpdate_ = now;
 
                 // Nightly full refresh to remove ghosting
@@ -282,6 +281,85 @@ void ClockDisplay::update() {
 
         delay(10);
     }
+}
+
+void ClockDisplay::fetchAndDisplayDashboard() {
+    if (downloadDashboard()) {
+        displayDashboard();
+    }
+}
+
+bool ClockDisplay::downloadDashboard() {
+    HTTPClient http;
+    http.begin(DASHBOARD_URL);
+    
+    int httpCode = http.GET();
+    if (httpCode != HTTP_CODE_OK) {
+        char statusMsg[64];
+        snprintf(statusMsg, sizeof(statusMsg), "Dashboard download failed: %d", httpCode);
+        displayStatus(statusMsg);
+        http.end();
+        return false;
+    }
+
+    // Calculate expected size of the bitfield
+    size_t expectedSize = (DASHBOARD_WIDTH * DASHBOARD_HEIGHT + 7) / 8; // Round up to nearest byte
+
+    // Allocate buffer for the bitfield data
+    if (dashboardBuffer_ == nullptr || dashboardBufferSize_ < expectedSize) {
+        if (dashboardBuffer_ != nullptr) {
+            free(dashboardBuffer_);
+        }
+        dashboardBuffer_ = (uint8_t*)malloc(expectedSize);
+        if (dashboardBuffer_ == nullptr) {
+            displayStatus("Memory allocation failed");
+            http.end();
+            return false;
+        }
+        dashboardBufferSize_ = expectedSize;
+    }
+
+    // Download the bitfield data
+    WiFiClient* stream = http.getStreamPtr();
+    size_t bytesRead = 0;
+    while (bytesRead < expectedSize) {
+        size_t available = stream->available();
+        if (available) {
+            size_t read = stream->readBytes(dashboardBuffer_ + bytesRead, available);
+            bytesRead += read;
+        }
+        if (!stream->connected()) {
+            displayStatus("Stream disconnected");
+            http.end();
+            return false;
+        }
+        delay(1);
+    }
+
+    http.end();
+
+    if (bytesRead != expectedSize) {
+        displayStatus("Invalid dashboard size");
+        return false;
+    }
+
+    return true;
+}
+
+void ClockDisplay::displayDashboard() {
+    // Calculate scaling factors to fit the display
+    float scaleX = (float)display_.width() / DASHBOARD_WIDTH;
+    float scaleY = (float)display_.height() / DASHBOARD_HEIGHT;
+    float scale = std::min(scaleX, scaleY);
+
+    // Calculate centered position
+    int16_t x = (display_.width() - (DASHBOARD_WIDTH * scale)) / 2;
+    int16_t y = (display_.height() - (DASHBOARD_HEIGHT * scale)) / 2;
+
+    // Display the image
+    display_.fillScreen(GxEPD_BLACK);
+    display_.drawBitmap(x, y, dashboardBuffer_, DASHBOARD_WIDTH, DASHBOARD_HEIGHT, GxEPD_WHITE);
+    display_.display(true);
 }
 
 void ClockDisplay::printLocalTime() {
