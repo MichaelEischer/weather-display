@@ -26,8 +26,8 @@ app.get('/', async (req, res) => {
   res.send(html);
 });
 
-// Binary endpoint
-app.get('/dashboard.bits', async (req, res) => {
+// Helper function to get dashboard screenshot
+async function getDashboardScreenshot(): Promise<Buffer> {
   const data = await fetchSensorData();
   const html = renderDashboardHtml(data);
 
@@ -41,8 +41,19 @@ app.get('/dashboard.bits', async (req, res) => {
   const png = await page.screenshot({ type: 'png' });
   await browser.close();
 
-  // Convert image to binary bit field
+  return Buffer.from(png);
+}
+
+// Helper function to convert image to black and white
+async function convertToBlackWhite(png: Buffer) {
   const image = await Jimp.read(png);
+  return image
+    .greyscale()
+    .threshold({ max: 128 });
+}
+
+// Helper function to convert black and white image to bit field
+function convertToBitField(image: any): Buffer {
   const width = image.bitmap.width;
   const height = image.bitmap.height;
   
@@ -71,12 +82,30 @@ app.get('/dashboard.bits', async (req, res) => {
     }
   }
 
-  // Send the raw binary data
+  return bitField;
+}
+
+// Binary endpoint
+app.get('/dashboard.bits', async (req, res) => {
+  const png = await getDashboardScreenshot();
+  const image = await convertToBlackWhite(png);
+  const bitField = convertToBitField(image);
+
   res.set('Content-Type', 'application/octet-stream');
   res.send(bitField);
 });
 
-app.listen(PORT, () => {
+// Black and white PNG endpoint
+app.get('/dashboard.png', async (req, res) => {
+  const png = await getDashboardScreenshot();
+  const image = await convertToBlackWhite(png);
+  const buffer = await image.getBuffer('image/png');
+
+  res.set('Content-Type', 'image/png');
+  res.send(buffer);
+});
+
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
