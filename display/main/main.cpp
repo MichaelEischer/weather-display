@@ -86,6 +86,8 @@ Error ClockDisplay::initNvs() {
             nvs_close(nvs_handle);
             return Error::NVS_INIT_FAILED;
         }
+        // remove the null terminator
+        apPassword_.resize(required_size - 1);
     } else if (ret == ESP_ERR_NVS_NOT_FOUND) {
         // Password doesn't exist, generate a new one
         generateApPassword();
