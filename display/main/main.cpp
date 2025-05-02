@@ -219,6 +219,11 @@ void loop() {
         printLocalTime();
         display.hibernate();
         last_update = now;
+
+        if (timeinfo.tm_hour == 3 && timeinfo.tm_min == 00) {
+          // nightly full refresh of the display
+          display.display(false);
+        }
       }
     } else if (time_available) {
       display_status("No time available");
