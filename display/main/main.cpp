@@ -64,12 +64,59 @@ Error ClockDisplay::initNvs() {
         displayStatus("NVS Init Failed", ret);
         return Error::NVS_INIT_FAILED;
     }
+
+    // Generate a static AP password such that it doesn't change on each boot
+
+    // Try to read the AP password from NVS
+    nvs_handle_t nvs_handle;
+    ret = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+    if (ret != ESP_OK) {
+        displayStatus("NVS Open Failed", ret);
+        return Error::NVS_INIT_FAILED;
+    }
+
+    size_t required_size;
+    ret = nvs_get_str(nvs_handle, "ap_password", nullptr, &required_size);
+    if (ret == ESP_OK) {
+        // Password exists in NVS, read it
+        apPassword_.resize(required_size);
+        ret = nvs_get_str(nvs_handle, "ap_password", &apPassword_[0], &required_size);
+        if (ret != ESP_OK) {
+            displayStatus("NVS Read Failed", ret);
+            nvs_close(nvs_handle);
+            return Error::NVS_INIT_FAILED;
+        }
+    } else if (ret == ESP_ERR_NVS_NOT_FOUND) {
+        // Password doesn't exist, generate a new one
+        generateApPassword();
+        
+        // Store the new password in NVS
+        ret = nvs_set_str(nvs_handle, "ap_password", apPassword_.c_str());
+        if (ret != ESP_OK) {
+            displayStatus("NVS Write Failed", ret);
+            nvs_close(nvs_handle);
+            return Error::NVS_INIT_FAILED;
+        }
+        
+        // Commit the changes
+        ret = nvs_commit(nvs_handle);
+        if (ret != ESP_OK) {
+            displayStatus("NVS Commit Failed", ret);
+            nvs_close(nvs_handle);
+            return Error::NVS_INIT_FAILED;
+        }
+    } else {
+        displayStatus("NVS Error", ret);
+        nvs_close(nvs_handle);
+        return Error::NVS_INIT_FAILED;
+    }
+
+    nvs_close(nvs_handle);
     return Error::NONE;
 }
 
 Error ClockDisplay::initWifi() {
     displayStatus("Connecting to WiFi");
-    generateApPassword();
     
     WiFiManager wifiManager;
     wifiManager.setConnectRetries(3);
