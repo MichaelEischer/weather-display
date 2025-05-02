@@ -1,0 +1,4 @@
+dependencies:
+  WifiManager:
+    git: https://github.com/tzapu/WiFiManager.git
+    version: 8e4c612fa3af0e3eb9d98b7a6da4acec0a37744a # v2.0.17 + a bunch of bug fixes

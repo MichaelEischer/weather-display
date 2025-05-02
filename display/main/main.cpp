@@ -5,6 +5,7 @@
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <qrcode.h>
 #include <WiFi.h>
+#include <WiFiManager.h>
 #include "nvs.h"
 #include "nvs_flash.h"
 #include <esp_err.h>
@@ -77,103 +78,6 @@ void fatal_error() {
   }
 }
 
-void init_wifi() {
-  // Initialize NVS
-  esp_err_t ret = nvs_flash_init();
-  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-    ESP_ERROR_CHECK(nvs_flash_erase());
-    ret = nvs_flash_init();
-  }
-  if (ret != ESP_OK) {
-    display_status("NVS Init Failed", ret);
-    fatal_error();
-  }
-
-  // Open NVS
-  nvs_handle_t nvs_handle;
-  ret = nvs_open("storage", NVS_READONLY, &nvs_handle);
-  if (ret != ESP_OK) {
-    display_status("NVS Open Failed", ret);
-    fatal_error();
-  }
-
-  // Read WiFi credentials from NVS
-  char wifi_ssid[32] = {0};
-  char wifi_password[64] = {0};
-  size_t ssid_size = sizeof(wifi_ssid);
-  size_t password_size = sizeof(wifi_password);
-
-  ret = nvs_get_str(nvs_handle, "wifi_ssid", wifi_ssid, &ssid_size);
-  if (ret != ESP_OK) {
-    nvs_close(nvs_handle);
-    display_status("WiFi SSID Read Failed", ret);
-    fatal_error();
-  }
-
-  ret = nvs_get_str(nvs_handle, "wifi_password", wifi_password, &password_size);
-  if (ret != ESP_OK) {
-    nvs_close(nvs_handle);
-    display_status("WiFi Password Read Failed", ret);
-    fatal_error();
-  }
-
-  nvs_close(nvs_handle);
-
-  // Initialize WiFi
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(wifi_ssid, wifi_password);
-  
-  // Wait for connection with visual feedback
-  int dots = 0;
-  int iteration = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    if (iteration % 100 == 0) {
-      dots = (dots + 1) % 4;
-      char status[32];
-      snprintf(status, sizeof(status), "Connecting%s", "...." + (3 - dots));
-      display_status(status);
-    }
-    iteration++;
-    delay(100);
-
-    if (dots > 3 || WiFi.status() == WL_NO_SSID_AVAIL || WiFi.status() == WL_CONNECT_FAILED) {
-      display_status("Failed to connect to WiFi");
-      delay(10000);
-      return;
-    }
-  }
-  
-  // Show final status
-  char ip_status[64];
-  snprintf(ip_status, sizeof(ip_status), "Connected!\nIP: %s", WiFi.localIP().toString().c_str());
-  display_status(ip_status);
-  delay(2000);
-}
-
-void init_epaper() {
-  // Initialize SPI with correct pins
-  spi.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, -1);
-  display.epd2.selectSPI(spi, SPISettings(SPI_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
-  display.init(115200, true, 10, false);
-
-  display.setRotation(3);
-  display.clearScreen(GxEPD_WHITE);
-  display.fillScreen(GxEPD_WHITE);
-  display.hibernate();
-}
-
-void init_ntp() {
-  // Configure NTP
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
-}
-
-void setup()
-{
-  init_epaper();
-  init_wifi();
-  init_ntp();
-}
-
 void display_qrcode(esp_qrcode_handle_t qrcode) {
   int size = esp_qrcode_get_size(qrcode);
   int border = 2;
@@ -198,6 +102,73 @@ void draw_qrcode(const char* text) {
     .qrcode_ecc_level = ESP_QRCODE_ECC_LOW,
   };
   esp_qrcode_generate(&cfg, text);
+}
+
+const char* AP_NAME = "esp-clock";
+char apPassword[11];
+
+void generate_ap_password() {
+  // set apPassword to a random password with 10 characters
+  for (int i = 0; i < sizeof(apPassword)-1; i++) {
+    apPassword[i] = 'a' + random(26);
+  }
+  apPassword[sizeof(apPassword)-1] = '\0';
+}
+
+void configModeCallback (WiFiManager *myWiFiManager) {
+    char status[100];
+    snprintf(status, sizeof(status), "WIFI:S:%s;T:WPA;P:%s;H:false;", AP_NAME, apPassword);
+    draw_qrcode(status);
+}
+
+void init_wifi() {
+  display_status("Connecting to WiFi");
+  generate_ap_password();
+  WiFiManager wifiManager;
+  wifiManager.setConnectRetries(3);
+  wifiManager.setConfigPortalTimeout(300);
+  wifiManager.setCountry("DE");
+  wifiManager.setAPCallback(configModeCallback);
+  if (!wifiManager.autoConnect(AP_NAME, apPassword)) {
+    display_status("Failed to connect to WiFi");
+    fatal_error();
+  }
+}
+
+void init_nvs() {
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  if (ret != ESP_OK) {
+    display_status("NVS Init Failed", ret);
+    fatal_error();
+  }
+}
+
+void init_epaper() {
+  // Initialize SPI with correct pins
+  spi.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, -1);
+  display.epd2.selectSPI(spi, SPISettings(SPI_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
+  display.init(115200, true, 10, false);
+
+  display.setRotation(3);
+  display.clearScreen(GxEPD_WHITE);
+  display.fillScreen(GxEPD_WHITE);
+  display.hibernate();
+}
+
+void init_ntp() {
+  // Configure NTP
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
+}
+
+void setup()
+{
+  init_epaper();
+  init_wifi();
+  init_ntp();
 }
 
 void printLocalTime() {
@@ -258,13 +229,10 @@ void loop() {
   }
 }
 
-// const char HelloWorld[] = "Hello World!";
-
 extern "C" void app_main()
 {
   initArduino();
   setup();
 
-  // draw_qrcode(HelloWorld);
   loop();
 }
