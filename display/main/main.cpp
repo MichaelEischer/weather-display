@@ -12,6 +12,7 @@
 #include <esp_system.h>
 #include <time.h>
 #include <esp_sntp.h>
+#include <esp_task_wdt.h>
 
 #include "Fonts/NotoSansBold80pt7b.h"
 
@@ -166,9 +167,22 @@ void init_ntp() {
 
 void setup()
 {
+  // Initialize the Task Watchdog Timer (TWDT)
+  esp_task_wdt_config_t config = {
+    .timeout_ms = 360000,
+    .idle_core_mask = 0,
+    .trigger_panic = true
+  };
+  esp_task_wdt_init(&config);
+  esp_task_wdt_add(NULL); // Add current task to watchdog
+
   init_epaper();
   init_wifi();
   init_ntp();
+
+  // Reconfigure watchdog with shorter timeout after WiFi is connected
+  config.timeout_ms = 30000;
+  esp_task_wdt_init(&config);
 }
 
 void printLocalTime() {
@@ -208,6 +222,9 @@ void loop() {
   bool time_available = true;
   
   while(true) {
+    // Feed the watchdog
+    esp_task_wdt_reset();
+
     struct tm timeinfo;
   
     if (getLocalTime(&timeinfo)) {
