@@ -78,7 +78,7 @@ Error ClockDisplay::initWifi() {
     wifiManager.setAPCallback([this](WiFiManager* wm) { this->configModeCallback(wm); });
     
     if (!wifiManager.autoConnect(AP_NAME, apPassword_.c_str())) {
-        displayStatus("Failed to connect to WiFi");
+        displayStatus("WiFi setup failed");
         return Error::WIFI_CONNECT_FAILED;
     }
 
@@ -90,29 +90,22 @@ void ClockDisplay::initNtp() {
 }
 
 void ClockDisplay::displayStatus(const std::string& status, esp_err_t err) {
-    display_.setFont(&FreeMonoBold9pt7b);
+    display_.setFont(&FreeMonoBold18pt7b);
     display_.setTextColor(GxEPD_BLACK);
     display_.fillScreen(GxEPD_WHITE);
 
-    int16_t tbx, tby;
-    uint16_t tbw, tbh;
-    display_.getTextBounds(status.c_str(), 0, 0, &tbx, &tby, &tbw, &tbh);
-    uint16_t x = ((display_.width() - tbw) / 2) - tbx;
-    uint16_t y = display_.height() / 2;
-
-    display_.setCursor(x, y);
-    display_.print(status.c_str());
+    // Draw main status message
+    int16_t error_y = display_.height() / 2;
+    uint16_t tbh = drawCenteredText(status, error_y);
 
     if (err != ESP_OK) {
         char err_msg[64];
-        snprintf(err_msg, sizeof(err_msg), "Error: 0x%x\n%s", err, esp_err_to_name(err));
+        snprintf(err_msg, sizeof(err_msg), "Error: 0x%x", err);
+        error_y += tbh + 10;
+        drawCenteredText(err_msg, error_y);
 
-        display_.getTextBounds(err_msg, 0, 0, &tbx, &tby, &tbw, &tbh);
-        x = ((display_.width() - tbw) / 2) - tbx;
-        y += tbh + 10;
-
-        display_.setCursor(x, y);
-        display_.print(err_msg);
+        error_y += tbh + 5;
+        drawCenteredText(esp_err_to_name(err), error_y);
     }
 
     display_.display(true);
@@ -125,33 +118,87 @@ void ClockDisplay::generateApPassword() {
     }
 }
 
-void ClockDisplay::configModeCallback(WiFiManager* wifiManager) {
-    std::string status = "WIFI:S:" + std::string(AP_NAME) + ";T:WPA;P:" + apPassword_ + ";H:false;";
-    drawQrcode(status);
+uint16_t ClockDisplay::drawCenteredText(const std::string& text, int16_t y) {
+    int16_t tbx, tby;
+    uint16_t tbw, tbh;
+
+    display_.getTextBounds(text.c_str(), 0, 0, &tbx, &tby, &tbw, &tbh);
+    int16_t x = (display_.width() - tbw) / 2 - tbx;
+    display_.setCursor(x, y);
+    display_.print(text.c_str());
+    return tbh;
 }
 
-void ClockDisplay::displayQrcode(esp_qrcode_handle_t qrcode) {
+void ClockDisplay::configModeCallback(WiFiManager* wifiManager) {
+    display_.fillScreen(GxEPD_WHITE);
+    display_.setFont(&FreeMonoBold18pt7b);
+    display_.setTextColor(GxEPD_BLACK);
+
+    // Calculate center positions
+    int16_t center_x = display_.width() / 2;
+    int16_t center_y = display_.height() / 2;
+
+    // Draw "Scan to setup WiFi" text
+    const char* title = "Scan to setup WiFi";
+    int16_t title_y = 40; // Top margin
+    uint16_t tbh = drawCenteredText(title, title_y);
+
+    // Draw QR code
+    std::string status = "WIFI:S:" + std::string(AP_NAME) + ";T:WPA;P:" + apPassword_ + ";H:false;";
+    drawQrcode(status, center_x, center_y);
+
+    display_.setFont(&FreeMonoBold12pt7b);
+
+    // Draw AP name
+    std::string ap_name = "SSID: " + std::string(AP_NAME);
+    int16_t ap_y = center_y + 120; // Below QR code
+    tbh = drawCenteredText(ap_name, ap_y);
+    
+    // Draw password
+    std::string ap_pass = "Pass: " + apPassword_;
+    ap_y += tbh + 5; // Small gap between lines
+    tbh = drawCenteredText(ap_pass, ap_y);
+
+    // Draw IP address
+    const char* ip = "http://192.168.4.1";
+    int16_t ip_y = ap_y + tbh + 10; // Below AP info
+    tbh = drawCenteredText(ip, ip_y);
+
+    display_.display(true);
+}
+
+// Initialize static members
+int16_t ClockDisplay::qrCodeX_ = 0;
+int16_t ClockDisplay::qrCodeY_ = 0;
+
+void ClockDisplay::displayQrcode(esp_qrcode_handle_t qrcode, int16_t x, int16_t y) {
     constexpr int border = 2;
     constexpr int pixel_size = 4;
     int size = esp_qrcode_get_size(qrcode);
     
-    int offset_x = display_.width() / 2 - size / 2 * pixel_size;
-    int offset_y = display_.height() / 2 + 10 * pixel_size;
-
-    for (int y = -border; y < size + border; y++) {
-        for (int x = -border; x < size + border; x++) {
-            uint16_t color = esp_qrcode_get_module(qrcode, x, y) ? GxEPD_BLACK : GxEPD_WHITE;
-            display_.fillRect(x * pixel_size + offset_x, y * pixel_size + offset_y, 
+    // Calculate the total size including border and pixel size
+    int total_size = (size + 2 * border) * pixel_size;
+    
+    // Calculate the offset to center the QR code on the given coordinates
+    int16_t offset_x = x - total_size / 2;
+    int16_t offset_y = y - total_size / 2;
+    
+    for (int y_pos = -border; y_pos < size + border; y_pos++) {
+        for (int x_pos = -border; x_pos < size + border; x_pos++) {
+            uint16_t color = esp_qrcode_get_module(qrcode, x_pos, y_pos) ? GxEPD_BLACK : GxEPD_WHITE;
+            display_.fillRect(x_pos * pixel_size + offset_x, y_pos * pixel_size + offset_y, 
                              pixel_size, pixel_size, color);
         }
     }
-    display_.display(true);
 }
 
-void ClockDisplay::drawQrcode(const std::string& text) {
+void ClockDisplay::drawQrcode(const std::string& text, int16_t x, int16_t y) {
+    qrCodeX_ = x;
+    qrCodeY_ = y;
+    
     esp_qrcode_config_t cfg = {
         .display_func = [](esp_qrcode_handle_t qrcode) {
-            ClockDisplay::getInstance().displayQrcode(qrcode);
+            ClockDisplay::getInstance().displayQrcode(qrcode, qrCodeX_, qrCodeY_);
         },
         .max_qrcode_version = 10,
         .qrcode_ecc_level = ESP_QRCODE_ECC_LOW,
