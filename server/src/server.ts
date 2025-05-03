@@ -52,13 +52,22 @@ async function convertToBlackWhite(png: Buffer) {
     .threshold({ max: 128 });
 }
 
-// Helper function to convert black and white image to bit field
-function convertToBitField(image: any): Buffer {
+// Helper function to convert black and white image to binary PBM format
+function convertToPBM(image: any): Buffer {
   const width = image.bitmap.width;
   const height = image.bitmap.height;
   
-  // Create a buffer to hold the bit field (1 bit per pixel)
-  const bitField = Buffer.alloc(Math.ceil((width * height) / 8));
+  // Calculate bytes per row (rounded up to nearest byte)
+  const bytesPerRow = Math.ceil(width / 8);
+  const totalBytes = bytesPerRow * height;
+  
+  // Create buffer for PBM data (header + pixel data)
+  const header = `P4\n${width} ${height}\n`;
+  const buffer = Buffer.alloc(header.length + totalBytes);
+  
+  // Write PBM header
+  buffer.write(header, 0);
+  const headerLength = header.length;
   
   // Process each pixel
   for (let y = 0; y < height; y++) {
@@ -70,29 +79,28 @@ function convertToBitField(image: any): Buffer {
       const brightness = (r + g + b) / 3;
       const isWhite = brightness > 128;
       
-      // Calculate position in bit field
-      const bitIndex = y * width + x;
-      const byteIndex = Math.floor(bitIndex / 8);
-      const bitOffset = 7 - (bitIndex % 8); // MSB first
+      // Calculate position in buffer
+      const byteIndex = headerLength + (y * bytesPerRow) + Math.floor(x / 8);
+      const bitOffset = 7 - (x % 8); // MSB first
       
       // Set the bit (1 for white, 0 for black)
       if (isWhite) {
-        bitField[byteIndex] |= (1 << bitOffset);
+        buffer[byteIndex] |= (1 << bitOffset);
       }
     }
   }
 
-  return bitField;
+  return buffer;
 }
 
 // Binary endpoint
-app.get('/dashboard.bits', async (req, res) => {
+app.get('/dashboard.pbm', async (req, res) => {
   const png = await getDashboardScreenshot();
   const image = await convertToBlackWhite(png);
-  const bitField = convertToBitField(image);
+  const pbm = convertToPBM(image);
 
   res.set('Content-Type', 'application/octet-stream');
-  res.send(bitField);
+  res.send(pbm);
 });
 
 // Black and white PNG endpoint
