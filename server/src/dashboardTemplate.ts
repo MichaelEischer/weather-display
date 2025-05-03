@@ -52,7 +52,7 @@ export function renderDashboardHtml(sensorData: any): string {
             border-bottom: none;
           }
           .room-title {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: black;
             text-align: center;
@@ -63,15 +63,13 @@ export function renderDashboardHtml(sensorData: any): string {
             margin-bottom: 8px;
             align-items: center;
           }
-          .sensor-label {
-            color: black;
-            font-size: 18px;
-            font-weight: 600;
-          }
           .sensor-value {
             font-weight: bold;
             color: black;
-            font-size: 64px;
+            font-size: 48px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
           }
           .dew-point {
             font-weight: bold;
@@ -96,14 +94,11 @@ export function renderDashboardHtml(sensorData: any): string {
           <div class="room">
             <div class="room-title">${location.charAt(0).toUpperCase() + location.slice(1)}</div>
             <div class="sensor-row">
-              <span class="sensor-value">${sensors.temperature}°C</span>
-              <span class="sensor-value">${sensors.humidity}%</span>
+              <span class="sensor-value"><i class="fas fa-temperature-three-quarters"></i>${sensors.temperature}°C</span>
+              <span class="sensor-value"><i class="fas fa-droplet"></i>${sensors.humidity}%</span>
             </div>
             <div class="sensor-row">
-              <span class="dew-point">
-                <i class="fas fa-droplet"></i>
-                ${dewPoint.toFixed(1)}°C
-              </span>
+              <span class="dew-point"><i class="fas fa-water"></i>${dewPoint.toFixed(1)}°C</span>
             </div>
           </div>
         `}).join('')}
