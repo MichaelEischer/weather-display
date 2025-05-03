@@ -28,6 +28,17 @@ export function renderDashboardHtml(sensorData: any): string {
     return (b * alpha) / (a - alpha);
   }
 
+  // Get German date and weekday
+  function getGermanDate(): string {
+    const now = new Date();
+    const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    const months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const weekday = weekdays[now.getDay()];
+    const day = now.getDate();
+    const month = months[now.getMonth()];
+    return `${weekday}, ${day}. ${month}`;
+  }
+
   return `
     <html>
       <head>
@@ -42,6 +53,13 @@ export function renderDashboardHtml(sensorData: any): string {
             padding: 20px;
             box-sizing: border-box;
             font-size: 16px;
+          }
+          .date {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: black;
+            margin-bottom: 20px;
           }
           .room {
             background-color: white;
@@ -88,14 +106,15 @@ export function renderDashboardHtml(sensorData: any): string {
         </style>
       </head>
       <body>
+        <div class="date">${getGermanDate()}</div>
         ${Object.entries(groupedSensors).map(([location, sensors]: [string, any]) => {
           const dewPoint = calculateDewPoint(parseFloat(sensors.temperature), parseFloat(sensors.humidity));
           return `
           <div class="room">
             <div class="room-title">${location.charAt(0).toUpperCase() + location.slice(1)}</div>
             <div class="sensor-row">
-              <span class="sensor-value"><i class="fas fa-temperature-three-quarters"></i>${sensors.temperature}°C</span>
-              <span class="sensor-value"><i class="fas fa-droplet"></i>${sensors.humidity}%</span>
+              <span class="sensor-value"><i style="font-size: 80%;" class="fas fa-temperature-three-quarters"></i>${sensors.temperature}°C</span>
+              <span class="sensor-value"><i style="font-size: 80%;" class="fas fa-droplet"></i>${sensors.humidity}%</span>
             </div>
             <div class="sensor-row">
               <span class="dew-point"><i class="fas fa-water"></i>${dewPoint.toFixed(1)}°C</span>
