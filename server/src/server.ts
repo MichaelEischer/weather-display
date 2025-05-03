@@ -46,13 +46,10 @@ async function getDashboardScreenshot(): Promise<Buffer> {
     throw new Error('Browser not initialized');
   }
 
-  const data = await fetchSensorData();
-  const html = renderDashboardHtml(data);
-
   const page = await browser.newPage();
   await page.setViewport({ width: 480, height: 800 });
-  await page.setContent(html, { waitUntil: 'networkidle0' });
-  const png = await page.screenshot({ type: 'png' });
+  await page.goto(`http://localhost:${PORT}` , { waitUntil: 'networkidle0' });
+  const png = await page.screenshot({ type: 'png', optimizeForSpeed: true });
   await page.close();
 
   return Buffer.from(png);
