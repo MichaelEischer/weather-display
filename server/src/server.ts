@@ -1,6 +1,6 @@
 import express from 'express';
 import axios from 'axios';
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser } from 'puppeteer';
 import dotenv from 'dotenv';
 import { Jimp } from 'jimp';
 import { renderDashboardHtml } from './dashboardTemplate';
@@ -9,6 +9,17 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Store browser instance
+let browser: Browser | null = null;
+
+// Initialize browser
+async function initBrowser() {
+  browser = await puppeteer.launch({
+    args: process.env.PUPPETEER_ARGS?.split(' ') || [],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+  });
+}
 
 // Helper to fetch sensor data
 async function fetchSensorData() {
@@ -28,18 +39,18 @@ app.get('/', async (req, res) => {
 
 // Helper function to get dashboard screenshot
 async function getDashboardScreenshot(): Promise<Buffer> {
+  if (!browser) {
+    throw new Error('Browser not initialized');
+  }
+
   const data = await fetchSensorData();
   const html = renderDashboardHtml(data);
 
-  const browser = await puppeteer.launch({
-    args: process.env.PUPPETEER_ARGS?.split(' ') || [],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
-  });
   const page = await browser.newPage();
   await page.setViewport({ width: 480, height: 800 });
   await page.setContent(html, { waitUntil: 'networkidle0' });
   const png = await page.screenshot({ type: 'png' });
-  await browser.close();
+  await page.close();
 
   return Buffer.from(png);
 }
@@ -113,13 +124,17 @@ app.get('/dashboard.png', async (req, res) => {
   res.send(buffer);
 });
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
+  await initBrowser();
   console.log(`Server running on port ${PORT}`);
 });
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('Shutting down server...');
+  if (browser) {
+    await browser.close();
+  }
   server.close(() => {
     console.log('Server closed');
     process.exit(0);
