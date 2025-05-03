@@ -10,6 +10,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Serve static files
+app.use('/assets', express.static('public/assets'));
+
 // Store browser instance
 let browser: Browser | null = null;
 

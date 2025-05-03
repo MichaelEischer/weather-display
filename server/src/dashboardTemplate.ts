@@ -31,6 +31,7 @@ export function renderDashboardHtml(sensorData: any): string {
   return `
     <html>
       <head>
+        <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
         <style>
           body { 
             width: 480px; 
@@ -76,6 +77,9 @@ export function renderDashboardHtml(sensorData: any): string {
             font-weight: bold;
             color: black;
             font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
           }
           h1 {
             text-align: center;
@@ -96,8 +100,10 @@ export function renderDashboardHtml(sensorData: any): string {
               <span class="sensor-value">${sensors.humidity}%</span>
             </div>
             <div class="sensor-row">
-              <span class="sensor-label">Dew Point:</span>
-              <span class="dew-point">${dewPoint.toFixed(1)}°C</span>
+              <span class="dew-point">
+                <i class="fas fa-droplet"></i>
+                ${dewPoint.toFixed(1)}°C
+              </span>
             </div>
           </div>
         `}).join('')}
