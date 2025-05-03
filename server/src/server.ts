@@ -94,8 +94,8 @@ function convertToPBM(image: any): Buffer {
       const byteIndex = headerLength + (y * bytesPerRow) + Math.floor(x / 8);
       const bitOffset = 7 - (x % 8); // MSB first
       
-      // Set the bit (1 for white, 0 for black)
-      if (isWhite) {
+      // Set the bit (0 for white, 1 for black)
+      if (!isWhite) {
         buffer[byteIndex] |= (1 << bitOffset);
       }
     }
