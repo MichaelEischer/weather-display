@@ -302,10 +302,47 @@ bool ClockDisplay::downloadDashboard() {
         return false;
     }
 
-    // Calculate expected size of the bitfield
-    size_t expectedSize = (DASHBOARD_WIDTH * DASHBOARD_HEIGHT + 7) / 8; // Round up to nearest byte
+    // Read PBM header
+    WiFiClient* stream = http.getStreamPtr();
+    char header[64];
+    size_t headerLen = stream->readBytesUntil('\n', header, sizeof(header) - 1);
+    header[headerLen] = '\0';
+    
+    // Verify PBM magic number
+    if (strncmp(header, "P4", 2) != 0) {
+        displayStatus("Invalid PBM format");
+        http.end();
+        return false;
+    }
 
-    // Allocate buffer for the bitfield data
+    // Skip comments
+    while (true) {
+        headerLen = stream->readBytesUntil('\n', header, sizeof(header) - 1);
+        header[headerLen] = '\0';
+        if (header[0] != '#') break;
+    }
+
+    // Parse dimensions
+    int width, height;
+    if (sscanf(header, "%d %d", &width, &height) != 2) {
+        displayStatus("Invalid PBM dimensions");
+        http.end();
+        return false;
+    }
+
+    // Verify dimensions match expected size
+    if (width != DASHBOARD_WIDTH || height != DASHBOARD_HEIGHT) {
+        char statusMsg[64];
+        snprintf(statusMsg, sizeof(statusMsg), "Invalid size: %dx%d", width, height);
+        displayStatus(statusMsg);
+        http.end();
+        return false;
+    }
+
+    // Calculate expected size (PBM is 1 bit per pixel, packed into bytes)
+    size_t expectedSize = (width * height + 7) / 8;
+
+    // Allocate buffer for the PBM data
     if (dashboardBuffer_ == nullptr || dashboardBufferSize_ < expectedSize) {
         if (dashboardBuffer_ != nullptr) {
             free(dashboardBuffer_);
@@ -319,8 +356,7 @@ bool ClockDisplay::downloadDashboard() {
         dashboardBufferSize_ = expectedSize;
     }
 
-    // Download the bitfield data
-    WiFiClient* stream = http.getStreamPtr();
+    // Download the PBM data
     size_t bytesRead = 0;
     while (bytesRead < expectedSize) {
         size_t available = stream->available();
@@ -339,7 +375,7 @@ bool ClockDisplay::downloadDashboard() {
     http.end();
 
     if (bytesRead != expectedSize) {
-        displayStatus("Invalid dashboard size");
+        displayStatus("Invalid PBM size");
         return false;
     }
 
