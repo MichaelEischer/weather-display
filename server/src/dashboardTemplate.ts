@@ -44,15 +44,17 @@ export function renderDashboardHtml(sensorData: any): string {
           }
           .room {
             background-color: white;
-            border: 1px solid black;
             padding: 15px;
-            margin-bottom: 15px;
+            border-bottom: 2px solid black;
+          }
+          .room:last-child {
+            border-bottom: none;
           }
           .room-title {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
-            margin-bottom: 15px;
             color: black;
+            text-align: center;
           }
           .sensor-row {
             display: flex;
@@ -68,7 +70,12 @@ export function renderDashboardHtml(sensorData: any): string {
           .sensor-value {
             font-weight: bold;
             color: black;
-            font-size: 32px;
+            font-size: 64px;
+          }
+          .dew-point {
+            font-weight: bold;
+            color: black;
+            font-size: 20px;
           }
           h1 {
             text-align: center;
@@ -79,23 +86,18 @@ export function renderDashboardHtml(sensorData: any): string {
         </style>
       </head>
       <body>
-        <h1>Home Assistant Dashboard</h1>
         ${Object.entries(groupedSensors).map(([location, sensors]: [string, any]) => {
           const dewPoint = calculateDewPoint(parseFloat(sensors.temperature), parseFloat(sensors.humidity));
           return `
           <div class="room">
             <div class="room-title">${location.charAt(0).toUpperCase() + location.slice(1)}</div>
             <div class="sensor-row">
-              <span class="sensor-label">Temperature:</span>
               <span class="sensor-value">${sensors.temperature}°C</span>
-            </div>
-            <div class="sensor-row">
-              <span class="sensor-label">Humidity:</span>
               <span class="sensor-value">${sensors.humidity}%</span>
             </div>
             <div class="sensor-row">
               <span class="sensor-label">Dew Point:</span>
-              <span class="sensor-value">${dewPoint.toFixed(1)}°C</span>
+              <span class="dew-point">${dewPoint.toFixed(1)}°C</span>
             </div>
           </div>
         `}).join('')}
