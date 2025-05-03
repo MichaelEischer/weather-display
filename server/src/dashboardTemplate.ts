@@ -20,6 +20,14 @@ export function renderDashboardHtml(sensorData: any): string {
     return acc;
   }, {});
 
+  // Calculate dew point using Magnus formula
+  function calculateDewPoint(temperature: number, humidity: number): number {
+    const a = 17.625;
+    const b = 243.04;
+    const alpha = ((a * temperature) / (b + temperature)) + Math.log(humidity / 100);
+    return (b * alpha) / (a - alpha);
+  }
+
   return `
     <html>
       <head>
@@ -72,7 +80,9 @@ export function renderDashboardHtml(sensorData: any): string {
       </head>
       <body>
         <h1>Home Assistant Dashboard</h1>
-        ${Object.entries(groupedSensors).map(([location, sensors]: [string, any]) => `
+        ${Object.entries(groupedSensors).map(([location, sensors]: [string, any]) => {
+          const dewPoint = calculateDewPoint(parseFloat(sensors.temperature), parseFloat(sensors.humidity));
+          return `
           <div class="room">
             <div class="room-title">${location.charAt(0).toUpperCase() + location.slice(1)}</div>
             <div class="sensor-row">
@@ -83,8 +93,12 @@ export function renderDashboardHtml(sensorData: any): string {
               <span class="sensor-label">Humidity:</span>
               <span class="sensor-value">${sensors.humidity}%</span>
             </div>
+            <div class="sensor-row">
+              <span class="sensor-label">Dew Point:</span>
+              <span class="sensor-value">${dewPoint.toFixed(1)}°C</span>
+            </div>
           </div>
-        `).join('')}
+        `}).join('')}
       </body>
     </html>
   `;
