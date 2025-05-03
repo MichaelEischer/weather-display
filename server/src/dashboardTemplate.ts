@@ -1,24 +1,57 @@
 export function renderDashboardHtml(sensorData: any): string {
+  // Define set of relevant sensor IDs
+  const relevantSensorIds = new Set([
+    'sensor.temperatur_wohnzimmer_temperature',
+    'sensor.temperatur_wohnzimmer_humidity',
+    'sensor.temperatur_bad_temperature',
+    'sensor.temperatur_bad_humidity',
+    'sensor.temperatur_balkon_temperature',
+    'sensor.temperatur_balkon_humidity',
+    'weather.forecast_home'
+  ]);
+
   // Filter for our specific sensors
-  const relevantSensors = sensorData.filter((s: any) => 
-    s.entity_id === 'sensor.temperatur_wohnzimmer_temperature' ||
-    s.entity_id === 'sensor.temperatur_wohnzimmer_humidity' ||
-    s.entity_id === 'sensor.temperatur_bad_temperature' ||
-    s.entity_id === 'sensor.temperatur_bad_humidity' ||
-    s.entity_id === 'sensor.temperatur_balkon_temperature' ||
-    s.entity_id === 'sensor.temperatur_balkon_humidity'
-  );
+  const relevantSensors = sensorData.filter((s: any) => relevantSensorIds.has(s.entity_id));
+
+  // Get weather state
+  const weatherSensor = relevantSensors.find((s: any) => s.entity_id === 'weather.forecast_home');
+  const weatherState = weatherSensor?.state || 'unknown';
+
+  // Map weather states to Font Awesome icons
+  const weatherIcons: { [key: string]: string } = {
+    'clear-night': 'fa-moon',
+    'cloudy': 'fa-cloud',
+    'fog': 'fa-smog',
+    'hail': 'fa-cloud-meatball',
+    'lightning': 'fa-bolt',
+    'lightning-rainy': 'fa-cloud-bolt',
+    'partlycloudy': 'fa-cloud-sun',
+    'pouring': 'fa-cloud-showers-heavy',
+    'rainy': 'fa-cloud-rain',
+    'snowy': 'fa-snowflake',
+    'snowy-rainy': 'fa-cloud-snow',
+    'sunny': 'fa-sun',
+    'windy': 'fa-wind',
+    'windy-variant': 'fa-wind',
+    'exceptional': 'fa-exclamation-triangle',
+    'unknown': 'fa-question'
+  };
+
+  // Get the appropriate icon class based on weather state
+  const weatherIcon = weatherIcons[weatherState] || weatherIcons['unknown'];
 
   // Group sensors by location
-  const groupedSensors = relevantSensors.reduce((acc: any, sensor: any) => {
-    const location = sensor.entity_id.split('_')[1];
-    const type = sensor.entity_id.split('_')[2];
-    if (!acc[location]) {
-      acc[location] = {};
-    }
-    acc[location][type] = sensor.state;
-    return acc;
-  }, {});
+  const groupedSensors = relevantSensors
+    .filter((s: any) => s.entity_id !== 'weather.forecast_home')
+    .reduce((acc: any, sensor: any) => {
+      const location = sensor.entity_id.split('_')[1];
+      const type = sensor.entity_id.split('_')[2];
+      if (!acc[location]) {
+        acc[location] = {};
+      }
+      acc[location][type] = sensor.state;
+      return acc;
+    }, {});
 
   // Calculate dew point using Magnus formula
   function calculateDewPoint(temperature: number, humidity: number): number {
@@ -60,6 +93,9 @@ export function renderDashboardHtml(sensorData: any): string {
             font-weight: bold;
             color: black;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
           }
           .room {
             background-color: white;
@@ -103,18 +139,27 @@ export function renderDashboardHtml(sensorData: any): string {
             margin-bottom: 30px;
             font-size: 32px;
           }
+          .sensor-icon {
+            font-size: 70%;
+          }
+          .weather-icon {
+            font-size: 60px;
+          }
         </style>
       </head>
       <body>
-        <div class="date">${getGermanDate()}</div>
+        <div class="date">
+          <i class="fas ${weatherIcon} weather-icon"></i>
+          ${getGermanDate()}
+        </div>
         ${Object.entries(groupedSensors).map(([location, sensors]: [string, any]) => {
           const dewPoint = calculateDewPoint(parseFloat(sensors.temperature), parseFloat(sensors.humidity));
           return `
           <div class="room">
             <div class="room-title">${location.charAt(0).toUpperCase() + location.slice(1)}</div>
             <div class="sensor-row">
-              <span class="sensor-value"><i style="font-size: 80%;" class="fas fa-temperature-three-quarters"></i>${sensors.temperature}°C</span>
-              <span class="sensor-value"><i style="font-size: 80%;" class="fas fa-droplet"></i>${sensors.humidity}%</span>
+              <span class="sensor-value"><i class="fas fa-temperature-three-quarters sensor-icon"></i>${sensors.temperature}°C</span>
+              <span class="sensor-value"><i class="fas fa-droplet sensor-icon"></i>${sensors.humidity}%</span>
             </div>
             <div class="sensor-row">
               <span class="dew-point"><i class="fas fa-water"></i>${dewPoint.toFixed(1)}°C</span>
