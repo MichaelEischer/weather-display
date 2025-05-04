@@ -1,0 +1,13 @@
+[submodule "display/components/arduino-esp32"]
+	path = display/components/arduino-esp32
+	url = https://github.com/espressif/arduino-esp32.git
+	shallow = true
+[submodule "display/components/Adafruit_BusIO"]
+	path = display/components/Adafruit_BusIO
+	url = https://github.com/adafruit/Adafruit_BusIO.git
+[submodule "display/components/Adafruit_GFX_Library"]
+	path = display/components/Adafruit_GFX_Library
+	url = https://github.com/adafruit/Adafruit-GFX-Library.git
+[submodule "display/components/GxEPD2/code"]
+	path = display/components/GxEPD2/code
+	url = https://github.com/ZinggJM/GxEPD2.git
