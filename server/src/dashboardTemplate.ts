@@ -3,10 +3,13 @@ export function renderDashboardHtml(sensorData: any): string {
   const relevantSensorIds = new Set([
     'sensor.temperatur_wohnzimmer_temperature',
     'sensor.temperatur_wohnzimmer_humidity',
+    'sensor.temperatur_wohnzimmer_battery',
     'sensor.temperatur_bad_temperature',
     'sensor.temperatur_bad_humidity',
+    'sensor.temperatur_bad_battery',
     'sensor.temperatur_balkon_temperature',
     'sensor.temperatur_balkon_humidity',
+    'sensor.temperatur_balkon_battery',
     'weather.forecast_home',
     'sensor.sun_next_rising',
     'sensor.sun_next_dusk'
@@ -160,6 +163,14 @@ export function renderDashboardHtml(sensorData: any): string {
             align-items: center;
             gap: 8px;
           }
+          .battery-level {
+            font-weight: bold;
+            color: black;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
           h1 {
             text-align: center;
             color: black;
@@ -204,6 +215,18 @@ export function renderDashboardHtml(sensorData: any): string {
             </div>
             <div class="sensor-row">
               <span class="dew-point"><i class="fas fa-water"></i>${dewPoint.toFixed(1)}°C</span>
+              ${sensors.battery ? `
+                <span class="battery-level">
+                  ${(() => {
+                    const batteryLevel = parseInt(sensors.battery);
+                    if (batteryLevel >= 90) return '<i class="fas fa-battery-full"></i>';
+                    if (batteryLevel >= 70) return '<i class="fas fa-battery-three-quarters"></i>';
+                    if (batteryLevel >= 40) return '<i class="fas fa-battery-half"></i>';
+                    if (batteryLevel >= 20) return '<i class="fas fa-battery-quarter"></i>';
+                    return '<i class="fas fa-battery-empty"></i>';
+                  })()}
+                </span>
+              ` : ''}
             </div>
           </div>
         `}).join('')}
