@@ -14,7 +14,7 @@ class WiFiManager;
 namespace WeatherDisplay {
 
 // Constants
-constexpr auto AP_NAME = "esp-weather";
+constexpr auto AP_NAME_BASE = "esp-weather";
 constexpr auto AP_PASSWORD_LENGTH = 10;
 constexpr auto AP_COUNTRY = "DE";
 

@@ -11,6 +11,14 @@
 
 namespace WeatherDisplay {
 
+std::string getAPName() {
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    char macStr[5];
+    snprintf(macStr, sizeof(macStr), "%02x%02x", mac[4], mac[5]);
+    return std::string(AP_NAME_BASE) + "-" + std::string(macStr);
+}
+
 WeatherDisplay& WeatherDisplay::getInstance() {
     static WeatherDisplay instance;
     return instance;
@@ -139,7 +147,7 @@ Error WeatherDisplay::initWifi() {
     wifiManager.setCountry(AP_COUNTRY);
     wifiManager.setAPCallback([this](WiFiManager* wm) { this->configModeCallback(wm); });
     
-    if (!wifiManager.autoConnect(AP_NAME, apPassword_.c_str())) {
+    if (!wifiManager.autoConnect(getAPName().c_str(), apPassword_.c_str())) {
         displayStatus("WiFi setup failed");
         return Error::WIFI_CONNECT_FAILED;
     }
@@ -206,13 +214,13 @@ void WeatherDisplay::configModeCallback(WiFiManager* wifiManager) {
     uint16_t tbh = drawCenteredText(title, title_y);
 
     // Draw QR code
-    std::string status = "WIFI:S:" + std::string(AP_NAME) + ";T:WPA;P:" + apPassword_ + ";H:false;";
+    std::string status = "WIFI:S:" + getAPName() + ";T:WPA;P:" + apPassword_ + ";H:false;";
     drawQrcode(status, center_x, center_y);
 
     display_.setFont(&FreeMonoBold12pt7b);
 
     // Draw AP name
-    std::string ap_name = "SSID: " + std::string(AP_NAME);
+    std::string ap_name = "SSID: " + getAPName();
     int16_t ap_y = center_y + 120; // Below QR code
     tbh = drawCenteredText(ap_name, ap_y);
     
