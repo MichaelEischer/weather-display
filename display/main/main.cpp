@@ -348,7 +348,7 @@ bool WeatherDisplay::downloadDashboard() {
     }
 
     // Verify dimensions match expected size
-    if (width != DASHBOARD_WIDTH || height != DASHBOARD_HEIGHT) {
+    if (width != display_.width() || height != display_.height()) {
         char statusMsg[64];
         snprintf(statusMsg, sizeof(statusMsg), "Invalid size: %dx%d", width, height);
         displayStatus(statusMsg);
@@ -400,18 +400,10 @@ bool WeatherDisplay::downloadDashboard() {
 }
 
 void WeatherDisplay::displayDashboard() {
-    // Calculate scaling factors to fit the display
-    float scaleX = (float)display_.width() / DASHBOARD_WIDTH;
-    float scaleY = (float)display_.height() / DASHBOARD_HEIGHT;
-    float scale = std::min(scaleX, scaleY);
-
-    // Calculate centered position
-    int16_t x = (display_.width() - (DASHBOARD_WIDTH * scale)) / 2;
-    int16_t y = (display_.height() - (DASHBOARD_HEIGHT * scale)) / 2;
-
     // Display the image. 1 = black, 0 = white.
     display_.fillScreen(GxEPD_WHITE);
-    display_.drawBitmap(x, y, dashboardBuffer_, DASHBOARD_WIDTH, DASHBOARD_HEIGHT, GxEPD_BLACK);
+    // only sets the pixels that have 1 in the buffer
+    display_.drawBitmap(0, 0, dashboardBuffer_, display_.width(), display_.height(), GxEPD_BLACK);
     display_.display(true);
 }
 } // namespace ClockDisplay
