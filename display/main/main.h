@@ -1,19 +1,15 @@
 #pragma once
 
-#include "Arduino.h"
-#include "pins_arduino.h"
 #include <string>
 #include <GxEPD2_BW.h>
 #include <GxEPD2_426_GDEQ0426T82Mod.h>
-#include <Fonts/FreeMonoBold12pt7b.h>
-#include <Fonts/FreeMonoBold18pt7b.h>
-#include <WiFi.h>
-#include <WiFiManager.h>
 #include <esp_err.h>
-#include <esp_system.h>
-#include <esp_task_wdt.h>
 #include <qrcode.h>
-#include <HTTPClient.h>
+
+#include "board.h"
+
+// Forward declaration of WiFiManager class
+class WiFiManager;
 
 namespace WeatherDisplay {
 
@@ -28,17 +24,6 @@ constexpr auto DASHBOARD_URL = "http://192.168.178.202:3000/dashboard.pbm";
 constexpr auto DASHBOARD_REFRESH_INTERVAL = 60000; // 1 minute in milliseconds
 constexpr auto DASHBOARD_WIDTH = 480;  // Width of the dashboard in pixels
 constexpr auto DASHBOARD_HEIGHT = 800; // Height of the dashboard in pixels
-
-// Pin definitions
-constexpr auto TFT_SCLK = D8;
-constexpr auto TFT_MISO = D9;
-constexpr auto TFT_MOSI = D10;
-constexpr auto TFT_CS = D1;
-constexpr auto TFT_DC = D3;
-constexpr auto TFT_BUSY = D2;
-constexpr auto TFT_RST = D0;
-constexpr auto SPI_FREQUENCY = 10000000;
-constexpr auto TFT_SPI_MODE = SPI_MODE0;
 
 // Error codes
 enum class Error {

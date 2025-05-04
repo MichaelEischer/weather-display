@@ -1,7 +1,13 @@
 #include "main.h"
+#include <esp_task_wdt.h>
 #include <nvs_flash.h>
-#include <esp_sntp.h>
+#include <HTTPClient.h>
 #include <SPI.h>
+#include <WiFi.h>
+#include <WiFiManager.h>
+
+#include <Fonts/FreeMonoBold12pt7b.h>
+#include <Fonts/FreeMonoBold18pt7b.h>
 
 namespace WeatherDisplay {
 
@@ -67,6 +73,7 @@ Error WeatherDisplay::initNvs() {
         displayStatus("NVS Init Failed", ret);
         return Error::NVS_INIT_FAILED;
     }
+    return Error::NONE;
 }
 
 Error WeatherDisplay::initWifiPassword() {
