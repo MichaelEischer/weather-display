@@ -1,6 +1,4 @@
 #include "main.h"
-#include <qrcode.h>
-#include <nvs.h>
 #include <nvs_flash.h>
 #include <esp_sntp.h>
 #include <SPI.h>
@@ -23,8 +21,13 @@ Error WeatherDisplay::initialize() {
     esp_task_wdt_add(NULL);
 
     initEpaper();
-    
+
     Error err = initNvs();
+    if (err != Error::NONE) {
+        return err;
+    }
+
+    err = initWifiPassword();
     if (err != Error::NONE) {
         return err;
     }
@@ -64,15 +67,17 @@ Error WeatherDisplay::initNvs() {
         displayStatus("NVS Init Failed", ret);
         return Error::NVS_INIT_FAILED;
     }
+}
 
+Error WeatherDisplay::initWifiPassword() {
     // Generate a static AP password such that it doesn't change on each boot
 
     // Try to read the AP password from NVS
     nvs_handle_t nvs_handle;
-    ret = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+    esp_err_t ret = nvs_open("storage", NVS_READWRITE, &nvs_handle);
     if (ret != ESP_OK) {
         displayStatus("NVS Open Failed", ret);
-        return Error::NVS_INIT_FAILED;
+        return Error::WIFI_PASSWORD_FAILED;
     }
 
     size_t required_size;
@@ -84,7 +89,7 @@ Error WeatherDisplay::initNvs() {
         if (ret != ESP_OK) {
             displayStatus("NVS Read Failed", ret);
             nvs_close(nvs_handle);
-            return Error::NVS_INIT_FAILED;
+            return Error::WIFI_PASSWORD_FAILED;
         }
         // remove the null terminator
         apPassword_.resize(required_size - 1);
@@ -97,7 +102,7 @@ Error WeatherDisplay::initNvs() {
         if (ret != ESP_OK) {
             displayStatus("NVS Write Failed", ret);
             nvs_close(nvs_handle);
-            return Error::NVS_INIT_FAILED;
+            return Error::WIFI_PASSWORD_FAILED;
         }
         
         // Commit the changes
@@ -105,12 +110,12 @@ Error WeatherDisplay::initNvs() {
         if (ret != ESP_OK) {
             displayStatus("NVS Commit Failed", ret);
             nvs_close(nvs_handle);
-            return Error::NVS_INIT_FAILED;
+            return Error::WIFI_PASSWORD_FAILED;
         }
     } else {
         displayStatus("NVS Error", ret);
         nvs_close(nvs_handle);
-        return Error::NVS_INIT_FAILED;
+        return Error::WIFI_PASSWORD_FAILED;
     }
 
     nvs_close(nvs_handle);
@@ -257,26 +262,29 @@ void WeatherDisplay::drawQrcode(const std::string& text, int16_t x, int16_t y) {
 }
 
 void WeatherDisplay::update() {
+    // set to true to enter the fallback path if time is not available
+    bool timeAvailable = true;
+    time_t lastUpdate = 0;
     while (true) {
         esp_task_wdt_reset();
 
         struct tm timeinfo;
         if (getLocalTime(&timeinfo)) {
-            timeAvailable_ = true;
+            timeAvailable = true;
             time_t now = mktime(&timeinfo);
             
-            if (lastUpdate_ == 0 || (now / 60) != (lastUpdate_ / 60)) {
+            if (lastUpdate == 0 || (now / 60) != (lastUpdate / 60)) {
                 fetchAndDisplayDashboard();
-                lastUpdate_ = now;
+                lastUpdate = now;
 
                 // Nightly full refresh to remove ghosting
                 if (timeinfo.tm_hour == 3 && timeinfo.tm_min == 0) {
                     display_.display(false);
                 }
             }
-        } else if (timeAvailable_) {
+        } else if (timeAvailable) {
             displayStatus("No time available");
-            timeAvailable_ = false;
+            timeAvailable = false;
         }
 
         delay(10);

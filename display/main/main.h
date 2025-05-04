@@ -2,9 +2,7 @@
 
 #include "Arduino.h"
 #include "pins_arduino.h"
-#include <memory>
 #include <string>
-#include <ctime>
 #include <GxEPD2_BW.h>
 #include <GxEPD2_426_GDEQ0426T82Mod.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -46,7 +44,8 @@ constexpr auto TFT_SPI_MODE = SPI_MODE0;
 enum class Error {
     NONE = 0,
     NVS_INIT_FAILED,
-    WIFI_CONNECT_FAILED
+    WIFI_CONNECT_FAILED,
+    WIFI_PASSWORD_FAILED
 };
 
 class WeatherDisplay {
@@ -63,9 +62,10 @@ private:
     WeatherDisplay& operator=(const WeatherDisplay&) = delete;
 
     void initEpaper();
+    Error initNvs();
+    Error initWifiPassword();
     Error initWifi();
     void initNtp();
-    Error initNvs();
 
     void displayStatus(const std::string& status, esp_err_t err = ESP_OK);
     void generateApPassword();
@@ -86,15 +86,12 @@ private:
 
     GxEPD2_BW<GxEPD2_426_GDEQ0426T82Mod, GxEPD2_426_GDEQ0426T82Mod::HEIGHT> display_;
     std::string apPassword_;
-    time_t lastUpdate_ = 0;
-    bool timeAvailable_ = true;
     uint8_t* dashboardBuffer_ = nullptr;
     size_t dashboardBufferSize_ = 0;
-    bool dashboardChanged_ = false;
 
     // Static variables for QR code coordinates
     static int16_t qrCodeX_;
     static int16_t qrCodeY_;
 };
 
-} // namespace ClockDisplay
+} // namespace WeatherDisplay
