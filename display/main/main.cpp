@@ -5,14 +5,14 @@
 #include <esp_sntp.h>
 #include <SPI.h>
 
-namespace ClockDisplay {
+namespace WeatherDisplay {
 
-ClockDisplay& ClockDisplay::getInstance() {
-    static ClockDisplay instance;
+WeatherDisplay& WeatherDisplay::getInstance() {
+    static WeatherDisplay instance;
     return instance;
 }
 
-Error ClockDisplay::initialize() {
+Error WeatherDisplay::initialize() {
     // Initialize the Task Watchdog Timer (TWDT)
     esp_task_wdt_config_t config = {
         .timeout_ms = 360000,
@@ -43,7 +43,7 @@ Error ClockDisplay::initialize() {
     return Error::NONE;
 }
 
-void ClockDisplay::initEpaper() {
+void WeatherDisplay::initEpaper() {
     SPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, -1);
     display_.epd2.selectSPI(SPI, SPISettings(SPI_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
     display_.init(115200, true, 10, false);
@@ -54,7 +54,7 @@ void ClockDisplay::initEpaper() {
     display_.hibernate();
 }
 
-Error ClockDisplay::initNvs() {
+Error WeatherDisplay::initNvs() {
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -117,7 +117,7 @@ Error ClockDisplay::initNvs() {
     return Error::NONE;
 }
 
-Error ClockDisplay::initWifi() {
+Error WeatherDisplay::initWifi() {
     displayStatus("Connecting to WiFi");
     
     WiFiManager wifiManager;
@@ -135,11 +135,11 @@ Error ClockDisplay::initWifi() {
     return Error::NONE;
 }
 
-void ClockDisplay::initNtp() {
+void WeatherDisplay::initNtp() {
     configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
 }
 
-void ClockDisplay::displayStatus(const std::string& status, esp_err_t err) {
+void WeatherDisplay::displayStatus(const std::string& status, esp_err_t err) {
     display_.setFont(&FreeMonoBold18pt7b);
     display_.setTextColor(GxEPD_BLACK);
     display_.fillScreen(GxEPD_WHITE);
@@ -161,14 +161,14 @@ void ClockDisplay::displayStatus(const std::string& status, esp_err_t err) {
     display_.display(true);
 }
 
-void ClockDisplay::generateApPassword() {
+void WeatherDisplay::generateApPassword() {
     apPassword_.resize(AP_PASSWORD_LENGTH);
     for (char& c : apPassword_) {
         c = 'a' + random(26);
     }
 }
 
-uint16_t ClockDisplay::drawCenteredText(const std::string& text, int16_t y) {
+uint16_t WeatherDisplay::drawCenteredText(const std::string& text, int16_t y) {
     int16_t tbx, tby;
     uint16_t tbw, tbh;
 
@@ -179,7 +179,7 @@ uint16_t ClockDisplay::drawCenteredText(const std::string& text, int16_t y) {
     return tbh;
 }
 
-void ClockDisplay::configModeCallback(WiFiManager* wifiManager) {
+void WeatherDisplay::configModeCallback(WiFiManager* wifiManager) {
     display_.fillScreen(GxEPD_WHITE);
     display_.setFont(&FreeMonoBold18pt7b);
     display_.setTextColor(GxEPD_BLACK);
@@ -218,10 +218,10 @@ void ClockDisplay::configModeCallback(WiFiManager* wifiManager) {
 }
 
 // Initialize static members
-int16_t ClockDisplay::qrCodeX_ = 0;
-int16_t ClockDisplay::qrCodeY_ = 0;
+int16_t WeatherDisplay::qrCodeX_ = 0;
+int16_t WeatherDisplay::qrCodeY_ = 0;
 
-void ClockDisplay::displayQrcode(esp_qrcode_handle_t qrcode, int16_t x, int16_t y) {
+void WeatherDisplay::displayQrcode(esp_qrcode_handle_t qrcode, int16_t x, int16_t y) {
     constexpr int border = 2;
     constexpr int pixel_size = 4;
     int size = esp_qrcode_get_size(qrcode);
@@ -242,13 +242,13 @@ void ClockDisplay::displayQrcode(esp_qrcode_handle_t qrcode, int16_t x, int16_t 
     }
 }
 
-void ClockDisplay::drawQrcode(const std::string& text, int16_t x, int16_t y) {
+void WeatherDisplay::drawQrcode(const std::string& text, int16_t x, int16_t y) {
     qrCodeX_ = x;
     qrCodeY_ = y;
     
     esp_qrcode_config_t cfg = {
         .display_func = [](esp_qrcode_handle_t qrcode) {
-            ClockDisplay::getInstance().displayQrcode(qrcode, qrCodeX_, qrCodeY_);
+            WeatherDisplay::getInstance().displayQrcode(qrcode, qrCodeX_, qrCodeY_);
         },
         .max_qrcode_version = 10,
         .qrcode_ecc_level = ESP_QRCODE_ECC_LOW,
@@ -256,7 +256,7 @@ void ClockDisplay::drawQrcode(const std::string& text, int16_t x, int16_t y) {
     esp_qrcode_generate(&cfg, text.c_str());
 }
 
-void ClockDisplay::update() {
+void WeatherDisplay::update() {
     while (true) {
         esp_task_wdt_reset();
 
@@ -283,13 +283,13 @@ void ClockDisplay::update() {
     }
 }
 
-void ClockDisplay::fetchAndDisplayDashboard() {
+void WeatherDisplay::fetchAndDisplayDashboard() {
     if (downloadDashboard()) {
         displayDashboard();
     }
 }
 
-bool ClockDisplay::downloadDashboard() {
+bool WeatherDisplay::downloadDashboard() {
     HTTPClient http;
     http.begin(DASHBOARD_URL);
     // 10 seconds timeout. The dashboard takes roughly 1 second to render on the server.
@@ -384,7 +384,7 @@ bool ClockDisplay::downloadDashboard() {
     return true;
 }
 
-void ClockDisplay::displayDashboard() {
+void WeatherDisplay::displayDashboard() {
     // Calculate scaling factors to fit the display
     float scaleX = (float)display_.width() / DASHBOARD_WIDTH;
     float scaleY = (float)display_.height() / DASHBOARD_HEIGHT;
@@ -409,10 +409,10 @@ static void fatal_error() {
 
 extern "C" void app_main() {
     initArduino();
-    auto& display = ClockDisplay::ClockDisplay::getInstance();
-    ClockDisplay::Error err = display.initialize();
+    auto& display = WeatherDisplay::WeatherDisplay::getInstance();
+    WeatherDisplay::Error err = display.initialize();
     
-    if (err != ClockDisplay::Error::NONE) {
+    if (err != WeatherDisplay::Error::NONE) {
         fatal_error();
     }
     

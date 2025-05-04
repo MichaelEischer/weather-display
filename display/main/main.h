@@ -17,14 +17,14 @@
 #include <qrcode.h>
 #include <HTTPClient.h>
 
-namespace ClockDisplay {
+namespace WeatherDisplay {
 
 // Constants
 constexpr auto NTP_SERVER1 = "0.de.pool.ntp.org";
 constexpr auto NTP_SERVER2 = "1.de.pool.ntp.org";
 constexpr auto GMT_OFFSET_SEC = 3600;
 constexpr auto DAYLIGHT_OFFSET_SEC = 3600;
-constexpr auto AP_NAME = "esp-clock";
+constexpr auto AP_NAME = "esp-weather";
 constexpr auto AP_PASSWORD_LENGTH = 10;
 constexpr auto DASHBOARD_URL = "http://192.168.178.202:3000/dashboard.pbm";
 constexpr auto DASHBOARD_REFRESH_INTERVAL = 60000; // 1 minute in milliseconds
@@ -49,18 +49,18 @@ enum class Error {
     WIFI_CONNECT_FAILED
 };
 
-class ClockDisplay {
+class WeatherDisplay {
 public:
-    static ClockDisplay& getInstance();
+    static WeatherDisplay& getInstance();
 
     Error initialize();
     void update();
 
 private:
-    ClockDisplay() : display_(GxEPD2_426_GDEQ0426T82Mod(TFT_CS, TFT_DC, TFT_RST, TFT_BUSY)) {}
-    ~ClockDisplay() = default;
-    ClockDisplay(const ClockDisplay&) = delete;
-    ClockDisplay& operator=(const ClockDisplay&) = delete;
+    WeatherDisplay() : display_(GxEPD2_426_GDEQ0426T82Mod(TFT_CS, TFT_DC, TFT_RST, TFT_BUSY)) {}
+    ~WeatherDisplay() = default;
+    WeatherDisplay(const WeatherDisplay&) = delete;
+    WeatherDisplay& operator=(const WeatherDisplay&) = delete;
 
     void initEpaper();
     Error initWifi();
