@@ -23,7 +23,7 @@ constexpr auto NTP_SERVER2 = "1.de.pool.ntp.org";
 constexpr auto GMT_OFFSET_SEC = 3600;
 constexpr auto DAYLIGHT_OFFSET_SEC = 3600;
 
-constexpr auto DASHBOARD_URL = "http://192.168.178.202:3000/dashboard.pbm";
+constexpr auto DASHBOARD_SERVER = "192.168.178.202:3000";
 constexpr auto DASHBOARD_REFRESH_INTERVAL = 60000; // 1 minute in milliseconds
 
 // Error codes
@@ -74,6 +74,7 @@ private:
     std::string apPassword_;
     uint8_t* dashboardBuffer_ = nullptr;
     size_t dashboardBufferSize_ = 0;
+    uint32_t currentDashboardHash_ = 0;
 
     // Static variables for QR code coordinates
     static int16_t qrCodeX_;

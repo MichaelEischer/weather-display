@@ -314,7 +314,7 @@ void WeatherDisplay::fetchAndDisplayDashboard() {
 
 bool WeatherDisplay::downloadDashboard() {
     HTTPClient http;
-    http.begin(DASHBOARD_URL);
+    http.begin(String("http://")+DASHBOARD_SERVER+"/dashboard.pbm");
     // 10 seconds timeout. The dashboard takes roughly 1 second to render on the server.
     http.setTimeout(10000);
     
@@ -404,7 +404,20 @@ bool WeatherDisplay::downloadDashboard() {
         return false;
     }
 
-    return true;
+    // Calculate hash of the new dashboard content
+    // A simple hash function is good enough
+    uint32_t newHash = 0;
+    for (size_t i = 0; i < expectedSize; i++) {
+        newHash = (newHash * 31) + dashboardBuffer_[i];
+    }
+
+    // Only update if the content has changed
+    if (newHash != currentDashboardHash_) {
+        currentDashboardHash_ = newHash;
+        return true;
+    }
+
+    return false;
 }
 
 void WeatherDisplay::displayDashboard() {
