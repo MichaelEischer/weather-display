@@ -88,7 +88,7 @@ export function renderDashboardHtml(sensorData: any): string {
     const weekday = weekdays[now.getDay()];
     const day = now.getDate();
     const month = months[now.getMonth()];
-    return `${weekday}, ${day}. ${month}`;
+    return `${weekday}<br/>${day}. ${month}`;
   }
 
   return `
@@ -107,7 +107,7 @@ export function renderDashboardHtml(sensorData: any): string {
             font-size: 16px;
           }
           .date {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             color: black;
             margin-bottom: 20px;
@@ -119,7 +119,7 @@ export function renderDashboardHtml(sensorData: any): string {
           .sun-times {
             display: flex;
             gap: 20px;
-            font-size: 18px;
+            font-size: 24px;
             justify-content: space-evenly;
           }
           .sun-info {
@@ -136,7 +136,7 @@ export function renderDashboardHtml(sensorData: any): string {
             border-bottom: none;
           }
           .room-title {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: black;
             text-align: center;
@@ -181,7 +181,7 @@ export function renderDashboardHtml(sensorData: any): string {
             font-size: 70%;
           }
           .weather-icon {
-            font-size: 60px;
+            font-size: 80px;
           }
         </style>
       </head>
