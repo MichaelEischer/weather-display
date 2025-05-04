@@ -7,7 +7,9 @@ export function renderDashboardHtml(sensorData: any): string {
     'sensor.temperatur_bad_humidity',
     'sensor.temperatur_balkon_temperature',
     'sensor.temperatur_balkon_humidity',
-    'weather.forecast_home'
+    'weather.forecast_home',
+    'sensor.sun_next_rising',
+    'sensor.sun_next_dusk'
   ]);
 
   // Filter for our specific sensors
@@ -16,6 +18,20 @@ export function renderDashboardHtml(sensorData: any): string {
   // Get weather state
   const weatherSensor = relevantSensors.find((s: any) => s.entity_id === 'weather.forecast_home');
   const weatherState = weatherSensor?.state || 'unknown';
+
+  // Get sunrise and sunset times
+  const sunriseSensor = relevantSensors.find((s: any) => s.entity_id === 'sensor.sun_next_rising');
+  const sunsetSensor = relevantSensors.find((s: any) => s.entity_id === 'sensor.sun_next_dusk');
+
+  // Format time in local timezone
+  function formatLocalTime(isoString: string, timezone: string = 'Europe/Berlin'): string {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('de-DE', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 
   // Map weather states to Font Awesome icons
   const weatherIcons: { [key: string]: string } = {
@@ -40,9 +56,9 @@ export function renderDashboardHtml(sensorData: any): string {
   // Get the appropriate icon class based on weather state
   const weatherIcon = weatherIcons[weatherState] || weatherIcons['unknown'];
 
-  // Group sensors by location
-  const groupedSensors = relevantSensors
-    .filter((s: any) => s.entity_id !== 'weather.forecast_home')
+  // Group data fields of temperature sensors
+  const temperatureSensors = relevantSensors
+    .filter((s: any) => s.entity_id.startsWith('sensor.temperatur_'))
     .reduce((acc: any, sensor: any) => {
       const location = sensor.entity_id.split('_')[1];
       const type = sensor.entity_id.split('_')[2];
@@ -88,14 +104,25 @@ export function renderDashboardHtml(sensorData: any): string {
             font-size: 16px;
           }
           .date {
-            text-align: center;
             font-size: 24px;
             font-weight: bold;
             color: black;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
+            justify-content: center;
+            gap: 20px;
+          }
+          .sun-times {
+            display: flex;
+            gap: 20px;
+            font-size: 18px;
             justify-content: space-evenly;
+          }
+          .sun-info {
+            display: flex;
+            align-items: center;
+            gap: 5px;
           }
           .room {
             background-color: white;
@@ -150,9 +177,23 @@ export function renderDashboardHtml(sensorData: any): string {
       <body>
         <div class="date">
           <i class="fas ${weatherIcon} weather-icon"></i>
+          <div>
           ${getGermanDate()}
+          ${sunriseSensor && sunsetSensor ? `
+            <div class="sun-times">
+              <div class="sun-info">
+                <i class="fas fa-sun"></i>
+                ${formatLocalTime(sunriseSensor.state)}
+              </div>
+              <div class="sun-info">
+                <i class="fas fa-moon"></i>
+                ${formatLocalTime(sunsetSensor.state)}
+              </div>
+            </div>
+          ` : ''}
+          </div>
         </div>
-        ${Object.entries(groupedSensors).map(([location, sensors]: [string, any]) => {
+        ${Object.entries(temperatureSensors).map(([location, sensors]: [string, any]) => {
           const dewPoint = calculateDewPoint(parseFloat(sensors.temperature), parseFloat(sensors.humidity));
           return `
           <div class="room">
