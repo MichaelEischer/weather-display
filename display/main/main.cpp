@@ -292,6 +292,8 @@ void ClockDisplay::fetchAndDisplayDashboard() {
 bool ClockDisplay::downloadDashboard() {
     HTTPClient http;
     http.begin(DASHBOARD_URL);
+    // 10 seconds timeout. The dashboard takes roughly 1 second to render on the server.
+    http.setTimeout(10000);
     
     int httpCode = http.GET();
     if (httpCode != HTTP_CODE_OK) {
