@@ -399,30 +399,6 @@ void ClockDisplay::displayDashboard() {
     display_.drawBitmap(x, y, dashboardBuffer_, DASHBOARD_WIDTH, DASHBOARD_HEIGHT, GxEPD_BLACK);
     display_.display(true);
 }
-
-void ClockDisplay::printLocalTime() {
-    struct tm timeinfo;
-    if (!getLocalTime(&timeinfo)) {
-        return;
-    }
-
-    display_.fillScreen(GxEPD_WHITE);
-    display_.setFont(&NotoSans_Bold80pt7b);
-    display_.setTextColor(GxEPD_BLACK);
-
-    char timeStr[16];
-    strftime(timeStr, sizeof(timeStr), "%H:%M", &timeinfo);
-
-    int16_t tbx, tby;
-    uint16_t tbw, tbh;
-    display_.getTextBounds(timeStr, 0, 0, &tbx, &tby, &tbw, &tbh);
-    uint16_t x = ((display_.width() - tbw) / 2) - tbx;
-    uint16_t y = display_.height() / 2;
-
-    display_.setCursor(x, y);
-    display_.print(timeStr);
-    display_.display(true);
-}
 } // namespace ClockDisplay
 
 static void fatal_error() {

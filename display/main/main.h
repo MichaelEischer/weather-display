@@ -9,7 +9,6 @@
 #include <GxEPD2_426_GDEQ0426T82Mod.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <Fonts/FreeMonoBold18pt7b.h>
-#include <Fonts/NotoSansBold80pt7b.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include <esp_err.h>
@@ -69,7 +68,6 @@ private:
     Error initNvs();
 
     void displayStatus(const std::string& status, esp_err_t err = ESP_OK);
-    void printLocalTime();
     void generateApPassword();
     void configModeCallback(WiFiManager* wifiManager);
 
