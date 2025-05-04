@@ -20,6 +20,7 @@ constexpr auto GMT_OFFSET_SEC = 3600;
 constexpr auto DAYLIGHT_OFFSET_SEC = 3600;
 constexpr auto AP_NAME = "esp-weather";
 constexpr auto AP_PASSWORD_LENGTH = 10;
+constexpr auto AP_COUNTRY = "DE";
 constexpr auto DASHBOARD_URL = "http://192.168.178.202:3000/dashboard.pbm";
 constexpr auto DASHBOARD_REFRESH_INTERVAL = 60000; // 1 minute in milliseconds
 constexpr auto DASHBOARD_WIDTH = 480;  // Width of the dashboard in pixels

@@ -136,7 +136,7 @@ Error WeatherDisplay::initWifi() {
     wifiManager.setConnectRetries(3);
     wifiManager.setConfigPortalTimeout(300);
     wifiManager.setShowInfoUpdate(false);
-    wifiManager.setCountry("DE");
+    wifiManager.setCountry(AP_COUNTRY);
     wifiManager.setAPCallback([this](WiFiManager* wm) { this->configModeCallback(wm); });
     
     if (!wifiManager.autoConnect(AP_NAME, apPassword_.c_str())) {
