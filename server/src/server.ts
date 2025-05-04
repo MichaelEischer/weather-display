@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import axios from 'axios';
 import puppeteer, { Browser } from 'puppeteer';
 import dotenv from 'dotenv';
@@ -29,14 +29,47 @@ async function fetchSensorData() {
   const url = `${process.env.HA_URL}/api/states`;
   const headers = { Authorization: `Bearer ${process.env.HA_TOKEN}` };
   const response = await axios.get(url, { headers });
-  // Filter/select your sensors here
   return response.data;
+}
+
+// Helper to fetch sensor statistics
+async function fetchSensorStatistics(entityId: string) {
+  const url = `${process.env.HA_URL}/api/history/period?filter_entity_id=${entityId}&minimal_response&no_attributes`;
+  const headers = {
+    Authorization: `Bearer ${process.env.HA_TOKEN}`,
+    'Content-Type': 'application/json'
+  };
+  const response = await axios.get(url, { headers });
+  return response.data;
+}
+
+// Helper to calculate min/max values from statistics
+function calculateMinMax(statistics: any[]): { min: number; max: number } {
+  if (!statistics || statistics.length === 0) {
+    return { min: 0, max: 0 };
+  }
+
+  let min = Number.MAX_VALUE;
+  let max = Number.MIN_VALUE;
+
+  statistics.forEach(entry => {
+    const value = parseFloat(entry.state);
+    if (!isNaN(value)) {
+      min = Math.min(min, value);
+      max = Math.max(max, value);
+    }
+  });
+
+  return {
+    min: min === Number.MAX_VALUE ? 0 : min,
+    max: max === Number.MIN_VALUE ? 0 : max
+  };
 }
 
 // Web page endpoint
 app.get('/', async (req, res) => {
   const data = await fetchSensorData();
-  const html = renderDashboardHtml(data);
+  const html = await renderDashboardHtml(data);
   res.send(html);
 });
 

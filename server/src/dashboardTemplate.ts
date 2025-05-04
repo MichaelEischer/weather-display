@@ -1,4 +1,6 @@
-export function renderDashboardHtml(sensorData: any): string {
+import axios from 'axios';
+
+export async function renderDashboardHtml(sensorData: any): Promise<string> {
   // Define set of relevant sensor IDs
   const relevantSensorIds = new Set([
     'sensor.temperatur_wohnzimmer_temperature',
@@ -91,6 +93,50 @@ export function renderDashboardHtml(sensorData: any): string {
     return `${weekday}<br/>${day}. ${month}`;
   }
 
+  // Helper to calculate min/max values from statistics
+  function calculateMinMax(statistics: any[]): { min: number; max: number } {
+    if (!statistics || statistics.length === 0) {
+      return { min: 0, max: 0 };
+    }
+
+    let min = Number.MAX_VALUE;
+    let max = Number.MIN_VALUE;
+
+    statistics.forEach(entry => {
+      const value = parseFloat(entry.state);
+      if (!isNaN(value)) {
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+      }
+    });
+
+    return {
+      min: min === Number.MAX_VALUE ? 0 : min,
+      max: max === Number.MIN_VALUE ? 0 : max
+    };
+  }
+
+  // Fetch statistics for all temperature sensors
+  const temperatureStats = await Promise.all(
+    Object.keys(temperatureSensors).map(async (location) => {
+      const sensorId = `sensor.temperatur_${location}_temperature`;
+      const url = `${process.env.HA_URL}/api/history/period?filter_entity_id=${sensorId}&minimal_response&no_attributes`;
+      const headers = {
+        Authorization: `Bearer ${process.env.HA_TOKEN}`,
+        'Content-Type': 'application/json'
+      };
+      const response = await axios.get(url, { headers });
+      const minMax = calculateMinMax(response.data[0]);
+      return { location, minMax };
+    })
+  );
+
+  // Inject statistics into temperatureSensors
+  temperatureStats.forEach(({ location, minMax }) => {
+    temperatureSensors[location].min = minMax.min;
+    temperatureSensors[location].max = minMax.max;
+  });
+
   return `
     <html>
       <head>
@@ -171,6 +217,12 @@ export function renderDashboardHtml(sensorData: any): string {
             align-items: center;
             gap: 8px;
           }
+          .min-max {
+            font-size: 16px;
+            color: black;
+            display: flex;
+            gap: 10px;
+          }
           h1 {
             text-align: center;
             color: black;
@@ -215,6 +267,10 @@ export function renderDashboardHtml(sensorData: any): string {
             </div>
             <div class="sensor-row">
               <span class="dew-point"><i class="fas fa-water"></i>${dewPoint.toFixed(1)}°C</span>
+              <span class="min-max">
+                <i class="fas fa-arrow-down"></i>${sensors.min.toFixed(1)}°C
+                <i class="fas fa-arrow-up"></i>${sensors.max.toFixed(1)}°C
+              </span>
               ${sensors.battery ? `
                 <span class="battery-level">
                   ${(() => {
