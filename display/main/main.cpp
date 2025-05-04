@@ -394,9 +394,9 @@ void ClockDisplay::displayDashboard() {
     int16_t x = (display_.width() - (DASHBOARD_WIDTH * scale)) / 2;
     int16_t y = (display_.height() - (DASHBOARD_HEIGHT * scale)) / 2;
 
-    // Display the image
-    display_.fillScreen(GxEPD_BLACK);
-    display_.drawBitmap(x, y, dashboardBuffer_, DASHBOARD_WIDTH, DASHBOARD_HEIGHT, GxEPD_WHITE);
+    // Display the image. 1 = black, 0 = white.
+    display_.fillScreen(GxEPD_WHITE);
+    display_.drawBitmap(x, y, dashboardBuffer_, DASHBOARD_WIDTH, DASHBOARD_HEIGHT, GxEPD_BLACK);
     display_.display(true);
 }
 
