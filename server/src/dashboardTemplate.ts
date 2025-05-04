@@ -142,98 +142,100 @@ export async function renderDashboardHtml(sensorData: any): Promise<string> {
       <head>
         <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
         <style>
+          :root {
+            --primary-color: black;
+            --font-size-small: 16px;
+            --font-size-medium: 20px;
+            --font-size-large: 24px;
+            --font-size-xxlarge: 32px;
+            --font-size-huge: 48px;
+            --spacing-small: 5px;
+            --spacing-medium: 8px;
+            --spacing-xlarge: 15px;
+          }
+
           body { 
-            width: 480px; 
-            height: 800px; 
-            margin: 0; 
+            width: 480px;
+            height: 800px;
+            margin: 0;
             font-family: sans-serif;
             background-color: white;
-            padding: 20px;
+            padding: var(--spacing-xlarge);
             box-sizing: border-box;
-            font-size: 16px;
           }
+
+          .weather-icon {
+            font-size: 80px;
+          }
+
           .date {
-            font-size: 28px;
+            font-size: var(--font-size-xxlarge);
             font-weight: bold;
-            color: black;
-            margin-bottom: 20px;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-xlarge);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: var(--spacing-xlarge);
           }
+
           .sun-times {
             display: flex;
-            gap: 20px;
-            font-size: 24px;
+            gap: var(--spacing-xlarge);
+            font-size: var(--font-size-large);
             justify-content: space-evenly;
           }
+
           .sun-info {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: var(--spacing-small);
           }
+
           .room {
             background-color: white;
-            padding: 15px;
-            border-bottom: 2px solid black;
+            padding: var(--spacing-xlarge);
+            border-bottom: 2px solid var(--primary-color);
           }
+
           .room:last-child {
             border-bottom: none;
           }
+
           .room-title {
-            font-size: 32px;
+            font-size: var(--font-size-xxlarge);
             font-weight: bold;
-            color: black;
+            color: var(--primary-color);
             text-align: center;
           }
+
           .sensor-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: var(--spacing-medium);
             align-items: center;
           }
+
           .sensor-value {
             font-weight: bold;
-            color: black;
-            font-size: 48px;
+            color: var(--primary-color);
+            font-size: var(--font-size-huge);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--spacing-medium);
           }
-          .dew-point {
-            font-weight: bold;
-            color: black;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          .battery-level {
-            font-weight: bold;
-            color: black;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          .min-max {
-            font-size: 16px;
-            color: black;
-            display: flex;
-            gap: 10px;
-          }
-          h1 {
-            text-align: center;
-            color: black;
-            margin-bottom: 30px;
-            font-size: 32px;
-          }
+
           .sensor-icon {
             font-size: 70%;
           }
-          .weather-icon {
-            font-size: 80px;
+
+          .sensor-value-small {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: var(--font-size-medium);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-small);
           }
         </style>
       </head>
@@ -266,13 +268,13 @@ export async function renderDashboardHtml(sensorData: any): Promise<string> {
               <span class="sensor-value"><i class="fas fa-droplet sensor-icon"></i>${sensors.humidity}%</span>
             </div>
             <div class="sensor-row">
-              <span class="dew-point"><i class="fas fa-water"></i>${dewPoint.toFixed(1)}°C</span>
-              <span class="min-max">
+              <span class="sensor-value-small"><i class="fas fa-water"></i>${dewPoint.toFixed(1)}°C</span>
+              <span class="sensor-value-small">
                 <i class="fas fa-arrow-down"></i>${sensors.min.toFixed(1)}°C
                 <i class="fas fa-arrow-up"></i>${sensors.max.toFixed(1)}°C
               </span>
               ${sensors.battery ? `
-                <span class="battery-level">
+                <span class="sensor-value-small">
                   ${(() => {
                     const batteryLevel = parseInt(sensors.battery);
                     if (batteryLevel >= 90) return '<i class="fas fa-battery-full"></i>';
