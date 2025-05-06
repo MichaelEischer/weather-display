@@ -1,5 +1,7 @@
 # Weather Display
 
+![e-ink display attached to esp showing weather and temperature information](docs/display.jpg)
+
 A weather display system consisting of a server component and a display component. This project allows you to display weather and temperature information on an e-ink display.
 
 The server component connects to a Home Assistant instance and retrieves data from there. This information is used to build an html dashboard, which gets rendered into a portable bitmap.
