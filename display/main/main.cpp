@@ -1,4 +1,5 @@
 #include "main.h"
+#include <esp_pm.h>
 #include <esp_task_wdt.h>
 #include <nvs_flash.h>
 #include <HTTPClient.h>
@@ -33,6 +34,16 @@ Error WeatherDisplay::initialize() {
     };
     esp_task_wdt_init(&config);
     esp_task_wdt_add(NULL);
+
+    esp_pm_config_t cfg = {
+        .max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
+        .min_freq_mhz = CONFIG_XTAL_FREQ,
+        .light_sleep_enable = false,
+        // Enabling light sleep requires resetting the ESP using the reset+boot button
+        // before flashing it.
+        // .light_sleep_enable = true,
+    };
+    esp_pm_configure(&cfg);
 
     initEpaper();
 
