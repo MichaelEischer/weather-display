@@ -384,17 +384,18 @@ bool WeatherDisplay::downloadDashboard() {
     // Download the PBM data
     size_t bytesRead = 0;
     while (bytesRead < expectedSize) {
-        size_t available = stream->available();
-        if (available) {
-            size_t read = stream->readBytes(dashboardBuffer_ + bytesRead, available);
-            bytesRead += read;
-        }
         if (!stream->connected()) {
             displayStatus("Stream disconnected");
             http.end();
             return false;
         }
-        delay(1);
+        size_t available = stream->available();
+        if (available) {
+            size_t read = stream->readBytes(dashboardBuffer_ + bytesRead, available);
+            bytesRead += read;
+        } else {
+            delay(1);
+        }
     }
 
     http.end();
