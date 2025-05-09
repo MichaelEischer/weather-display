@@ -61,6 +61,9 @@ private:
     void displayQrcode(esp_qrcode_handle_t qrcode, int16_t x, int16_t y);
     void drawQrcode(const std::string& text, int16_t x, int16_t y);
 
+    // update loop helpers
+    void waitNextSecond();
+
     // Dashboard related methods
     void fetchAndDisplayDashboard();
     bool downloadDashboard();

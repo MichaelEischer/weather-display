@@ -300,13 +300,20 @@ void WeatherDisplay::update() {
                     display_.hibernate();
                 }
             }
+            waitNextSecond();
         } else if (timeAvailable) {
             displayStatus("No time available");
             timeAvailable = false;
+            delay(1000);
         }
-
-        delay(1000);
     }
+}
+
+void WeatherDisplay::waitNextSecond() {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    int toSleep = 1000 - (ts.tv_nsec / 1000000);
+    delay(toSleep);
 }
 
 void WeatherDisplay::fetchAndDisplayDashboard() {
