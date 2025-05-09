@@ -179,6 +179,7 @@ void WeatherDisplay::displayStatus(const std::string& status, esp_err_t err) {
     }
 
     display_.display(true);
+    display_.hibernate();
 }
 
 void WeatherDisplay::generateApPassword() {
@@ -235,6 +236,7 @@ void WeatherDisplay::configModeCallback(WiFiManager* wifiManager) {
     tbh = drawCenteredText(ip, ip_y);
 
     display_.display(true);
+    display_.hibernate();
 }
 
 // Initialize static members
@@ -295,6 +297,7 @@ void WeatherDisplay::update() {
                 // Nightly full refresh to remove ghosting
                 if (timeinfo.tm_hour == 3 && timeinfo.tm_min == 0) {
                     display_.display(false);
+                    display_.hibernate();
                 }
             }
         } else if (timeAvailable) {
@@ -302,7 +305,7 @@ void WeatherDisplay::update() {
             timeAvailable = false;
         }
 
-        delay(10);
+        delay(1000);
     }
 }
 
@@ -427,6 +430,7 @@ void WeatherDisplay::displayDashboard() {
     // only sets the pixels that have 1 in the buffer
     display_.drawBitmap(0, 0, dashboardBuffer_, display_.width(), display_.height(), GxEPD_BLACK);
     display_.display(true);
+    display_.hibernate();
 }
 } // namespace ClockDisplay
 
