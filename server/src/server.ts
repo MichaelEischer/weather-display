@@ -7,6 +7,21 @@ import { renderDashboardHtml } from './dashboardTemplate';
 
 dotenv.config();
 
+// Validate required environment variables
+if (!process.env.HA_URL) {
+  throw new Error('HA_URL environment variable is not set. Please set it in your .env file.');
+}
+if (!process.env.HA_TOKEN) {
+  throw new Error('HA_TOKEN environment variable is not set. Please set it in your .env file.');
+}
+
+// Validate HA_URL format
+try {
+  new URL(process.env.HA_URL);
+} catch (e) {
+  throw new Error('HA_URL environment variable is not a valid URL. Please ensure it includes the protocol (http:// or https://).');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
