@@ -78,6 +78,7 @@ private:
     uint8_t* dashboardBuffer_ = nullptr;
     size_t dashboardBufferSize_ = 0;
     uint32_t currentDashboardHash_ = 0;
+    uint32_t identicalDraws_ = 0;
 
     // Static variables for QR code coordinates
     static int16_t qrCodeX_;
