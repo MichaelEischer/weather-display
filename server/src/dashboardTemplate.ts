@@ -144,11 +144,11 @@ export async function renderDashboardHtml(sensorData: any): Promise<string> {
         <style>
           :root {
             --primary-color: black;
-            --font-size-small: 16px;
-            --font-size-medium: 20px;
-            --font-size-large: 24px;
-            --font-size-xxlarge: 32px;
-            --font-size-huge: 48px;
+            --font-size-small: 20px;
+            --font-size-medium: 26px;
+            --font-size-large: 32px;
+            --font-size-xxlarge: 40px;
+            --font-size-huge: 60px;
             --spacing-small: 5px;
             --spacing-medium: 8px;
             --spacing-xlarge: 15px;
@@ -165,7 +165,7 @@ export async function renderDashboardHtml(sensorData: any): Promise<string> {
           }
 
           .weather-icon {
-            font-size: 80px;
+            font-size: 100px;
           }
 
           .date {
@@ -194,7 +194,7 @@ export async function renderDashboardHtml(sensorData: any): Promise<string> {
 
           .room {
             background-color: white;
-            padding: var(--spacing-xlarge);
+            padding: var(--spacing-medium) 0;
             border-bottom: 2px solid var(--primary-color);
           }
 
@@ -212,7 +212,6 @@ export async function renderDashboardHtml(sensorData: any): Promise<string> {
           .sensor-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: var(--spacing-medium);
             align-items: center;
           }
 
@@ -226,7 +225,7 @@ export async function renderDashboardHtml(sensorData: any): Promise<string> {
           }
 
           .sensor-icon {
-            font-size: 70%;
+            font-size: 50%;
           }
 
           .sensor-value-small {
