@@ -333,8 +333,8 @@ void WeatherDisplay::fetchAndDisplayDashboard() {
         if (checkForDashboardChange()) {
             displayDashboard();
             identicalDraws_ = 1;
-        } else if (identicalDraws_ < 2) {
-            // Draw the same image twice to improve contrast
+        } else if (identicalDraws_ < 3) {
+            // Draw the same image three times to improve contrast
             display_.display(true);
             identicalDraws_++;
         }
