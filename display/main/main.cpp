@@ -1,5 +1,4 @@
 #include "main.h"
-#include <esp_pm.h>
 #include <esp_task_wdt.h>
 #include <nvs_flash.h>
 #include <HTTPClient.h>
@@ -32,8 +31,8 @@ Error WeatherDisplay::initialize() {
         .idle_core_mask = 0,
         .trigger_panic = true
     };
-    esp_task_wdt_init(&config);
-    esp_task_wdt_add(NULL);
+    ESP_ERROR_CHECK(esp_task_wdt_init(&config));
+    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
 
     esp_pm_config_t cfg = {
         .max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
@@ -43,7 +42,8 @@ Error WeatherDisplay::initialize() {
         // before flashing it.
         // .light_sleep_enable = true,
     };
-    esp_pm_configure(&cfg);
+    ESP_ERROR_CHECK(esp_pm_configure(&cfg));
+    ESP_ERROR_CHECK(esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "dashboard", &pm_lock_));
 
     initEpaper();
 
@@ -66,7 +66,7 @@ Error WeatherDisplay::initialize() {
 
     // Reconfigure watchdog with shorter timeout after WiFi is connected
     config.timeout_ms = 30000;
-    esp_task_wdt_init(&config);
+    ESP_ERROR_CHECK(esp_task_wdt_init(&config));
 
     return Error::NONE;
 }
@@ -328,6 +328,7 @@ void WeatherDisplay::waitNextSecond() {
 }
 
 void WeatherDisplay::fetchAndDisplayDashboard() {
+    esp_pm_lock_acquire(pm_lock_);
     if (downloadDashboard()) {
         displayDashboard();
         identicalDraws_ = 1;
@@ -336,6 +337,7 @@ void WeatherDisplay::fetchAndDisplayDashboard() {
         display_.display(true);
         identicalDraws_++;
     }
+    esp_pm_lock_release(pm_lock_);
 }
 
 bool WeatherDisplay::downloadDashboard() {

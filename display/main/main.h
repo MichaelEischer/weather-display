@@ -4,6 +4,7 @@
 #include <GxEPD2_BW.h>
 #include <GxEPD2_426_GDEQ0426T82Mod.h>
 #include <esp_err.h>
+#include <esp_pm.h>
 #include <qrcode.h>
 
 #include "board.h"
@@ -72,6 +73,8 @@ private:
     // Helper method for drawing centered text
     // Returns the text height for vertical spacing calculations
     uint16_t drawCenteredText(const std::string& text, int16_t y);
+
+    esp_pm_lock_handle_t pm_lock_;
 
     GxEPD2_BW<GxEPD2_426_GDEQ0426T82Mod, GxEPD2_426_GDEQ0426T82Mod::HEIGHT> display_;
     std::string apPassword_;
