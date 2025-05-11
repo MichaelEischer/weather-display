@@ -68,16 +68,18 @@ private:
     // Dashboard related methods
     void fetchAndDisplayDashboard();
     bool downloadDashboard();
+    bool checkForDashboardChange();
     void displayDashboard();
 
     // Helper method for drawing centered text
     // Returns the text height for vertical spacing calculations
     uint16_t drawCenteredText(const std::string& text, int16_t y);
 
-    esp_pm_lock_handle_t pm_lock_;
-
     GxEPD2_BW<GxEPD2_426_GDEQ0426T82Mod, GxEPD2_426_GDEQ0426T82Mod::HEIGHT> display_;
     std::string apPassword_;
+
+    esp_pm_lock_handle_t pm_lock_ = nullptr;
+    int downloadErrors_ = 0;
     uint8_t* dashboardBuffer_ = nullptr;
     size_t dashboardBufferSize_ = 0;
     uint32_t currentDashboardHash_ = 0;

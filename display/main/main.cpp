@@ -330,13 +330,24 @@ void WeatherDisplay::waitNextSecond() {
 void WeatherDisplay::fetchAndDisplayDashboard() {
     esp_pm_lock_acquire(pm_lock_);
     if (downloadDashboard()) {
-        displayDashboard();
-        identicalDraws_ = 1;
-    } else if (identicalDraws_ < 2) {
-        // Draw the same image twice to improve contrast
-        display_.display(true);
-        identicalDraws_++;
+        if (checkForDashboardChange()) {
+            displayDashboard();
+            identicalDraws_ = 1;
+        } else if (identicalDraws_ < 2) {
+            // Draw the same image twice to improve contrast
+            display_.display(true);
+            identicalDraws_++;
+        }
+        downloadErrors_ = 0;
+    } else {
+        downloadErrors_++;
+        if (downloadErrors_ > 5) {
+            // restart ESP if downloads continue to fail
+            // this is essentially a workaround in case some internal state is corrupted
+            ESP.restart();
+        }
     }
+
     esp_pm_lock_release(pm_lock_);
 }
 
@@ -432,11 +443,14 @@ bool WeatherDisplay::downloadDashboard() {
         displayStatus("Invalid PBM size");
         return false;
     }
+    return true;
+}
 
+bool WeatherDisplay::checkForDashboardChange() {
     // Calculate hash of the new dashboard content
     // A simple hash function is good enough
     uint32_t newHash = 0;
-    for (size_t i = 0; i < expectedSize; i++) {
+    for (size_t i = 0; i < dashboardBufferSize_; i++) {
         newHash = (newHash * 31) + dashboardBuffer_[i];
     }
 
