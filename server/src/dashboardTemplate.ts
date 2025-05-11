@@ -23,6 +23,32 @@ interface DashboardData {
   temperatureSensors: TemperatureSensorsMap;
 }
 
+type SensorType = 'temperature' | 'humidity' | 'battery';
+
+const SENSOR_CONFIGS = Object.fromEntries(
+  ['wohnzimmer', 'bad', 'balkon'].map(location => [
+    location,
+    {
+      temperature: `sensor.temperatur_${location}_temperature`,
+      humidity: `sensor.temperatur_${location}_humidity`,
+      battery: `sensor.temperatur_${location}_battery`
+    }
+  ])
+) as Record<string, Record<SensorType, string>>;
+
+const OTHER_SENSORS = {
+  weather: 'weather.forecast_home',
+  sunrise: 'sensor.sun_next_rising',
+  sunset: 'sensor.sun_next_dusk'
+} as const;
+
+function getRelevantSensorIds(): Set<string> {
+  return new Set([
+    ...Object.values(SENSOR_CONFIGS).flatMap(config => Object.values(config)),
+    ...Object.values(OTHER_SENSORS)
+  ]);
+}
+
 // Data processing functions
 async function fetchSensorStatistics(sensorId: string): Promise<{ min: number; max: number }> {
   const url = `${process.env.HA_URL}/api/history/period?filter_entity_id=${sensorId}&minimal_response&no_attributes`;
@@ -90,26 +116,11 @@ async function fetchSensorData(): Promise<SensorData[]> {
 }
 
 async function processSensorData(sensorData: SensorData[]): Promise<DashboardData> {
-  const relevantSensorIds = new Set([
-    'sensor.temperatur_wohnzimmer_temperature',
-    'sensor.temperatur_wohnzimmer_humidity',
-    'sensor.temperatur_wohnzimmer_battery',
-    'sensor.temperatur_bad_temperature',
-    'sensor.temperatur_bad_humidity',
-    'sensor.temperatur_bad_battery',
-    'sensor.temperatur_balkon_temperature',
-    'sensor.temperatur_balkon_humidity',
-    'sensor.temperatur_balkon_battery',
-    'weather.forecast_home',
-    'sensor.sun_next_rising',
-    'sensor.sun_next_dusk'
-  ]);
+  const relevantSensors = sensorData.filter(s => getRelevantSensorIds().has(s.entity_id));
 
-  const relevantSensors = sensorData.filter(s => relevantSensorIds.has(s.entity_id));
-
-  const weatherSensor = relevantSensors.find(s => s.entity_id === 'weather.forecast_home');
-  const sunriseSensor = relevantSensors.find(s => s.entity_id === 'sensor.sun_next_rising');
-  const sunsetSensor = relevantSensors.find(s => s.entity_id === 'sensor.sun_next_dusk');
+  const weatherSensor = relevantSensors.find(s => s.entity_id === OTHER_SENSORS.weather);
+  const sunriseSensor = relevantSensors.find(s => s.entity_id === OTHER_SENSORS.sunrise);
+  const sunsetSensor = relevantSensors.find(s => s.entity_id === OTHER_SENSORS.sunset);
 
   const temperatureSensors: TemperatureSensorsMap = relevantSensors
     .filter(s => s.entity_id.startsWith('sensor.temperatur_'))
@@ -150,7 +161,7 @@ async function processSensorData(sensorData: SensorData[]): Promise<DashboardDat
   // Fetch statistics for all temperature sensors
   const temperatureStats = await Promise.all(
     Object.keys(temperatureSensors).map(async (location) => {
-      const sensorId = `sensor.temperatur_${location}_temperature`;
+      const sensorId = SENSOR_CONFIGS[location].temperature;
       const minMax = await fetchSensorStatistics(sensorId);
       return { location, minMax };
     })
