@@ -31,7 +31,7 @@ Error WeatherDisplay::initialize() {
         .idle_core_mask = 0,
         .trigger_panic = true
     };
-    ESP_ERROR_CHECK(esp_task_wdt_init(&config));
+    ESP_ERROR_CHECK(esp_task_wdt_reconfigure(&config));
     ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
 
     esp_pm_config_t cfg = {
@@ -66,7 +66,7 @@ Error WeatherDisplay::initialize() {
 
     // Reconfigure watchdog with shorter timeout after WiFi is connected
     config.timeout_ms = 30000;
-    ESP_ERROR_CHECK(esp_task_wdt_init(&config));
+    ESP_ERROR_CHECK(esp_task_wdt_reconfigure(&config));
 
     return Error::NONE;
 }
