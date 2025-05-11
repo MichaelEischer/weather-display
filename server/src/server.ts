@@ -39,18 +39,9 @@ async function initBrowser() {
   });
 }
 
-// Helper to fetch sensor data
-async function fetchSensorData() {
-  const url = `${process.env.HA_URL}/api/states`;
-  const headers = { Authorization: `Bearer ${process.env.HA_TOKEN}` };
-  const response = await axios.get(url, { headers });
-  return response.data;
-}
-
 // Web page endpoint
 app.get('/', async (req, res) => {
-  const data = await fetchSensorData();
-  const html = await renderDashboardHtml(data);
+  const html = await renderDashboardHtml();
   res.send(html);
 });
 
