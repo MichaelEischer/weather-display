@@ -67,7 +67,7 @@ private:
 
     // Dashboard related methods
     void fetchAndDisplayDashboard();
-    bool downloadDashboard();
+    String downloadDashboard();
     bool checkForDashboardChange();
     void displayDashboard();
 
@@ -79,7 +79,7 @@ private:
     std::string apPassword_;
 
     esp_pm_lock_handle_t pm_lock_ = nullptr;
-    int downloadErrors_ = 0;
+    int downloadErrors_ = -1; // -1 means first download
     uint8_t* dashboardBuffer_ = nullptr;
     size_t dashboardBufferSize_ = 0;
     uint32_t currentDashboardHash_ = 0;

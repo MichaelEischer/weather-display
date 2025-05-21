@@ -329,7 +329,8 @@ void WeatherDisplay::waitNextSecond() {
 
 void WeatherDisplay::fetchAndDisplayDashboard() {
     esp_pm_lock_acquire(pm_lock_);
-    if (downloadDashboard()) {
+    String status = downloadDashboard();
+    if (status.isEmpty()) {
         if (checkForDashboardChange()) {
             displayDashboard();
             identicalDraws_ = 1;
@@ -346,12 +347,17 @@ void WeatherDisplay::fetchAndDisplayDashboard() {
             // this is essentially a workaround in case some internal state is corrupted
             ESP.restart();
         }
+        if (downloadErrors_ > 1 || downloadErrors_ == 0) {
+            // only show the error message if it's the second time to not disrupt the display on transient errors
+            // or the display is just starting up
+            displayStatus(status.c_str());
+        }
     }
 
     esp_pm_lock_release(pm_lock_);
 }
 
-bool WeatherDisplay::downloadDashboard() {
+String WeatherDisplay::downloadDashboard() {
     HTTPClient http;
     http.begin(String("http://")+DASHBOARD_SERVER+"/dashboard.pbm");
     // 10 seconds timeout. The dashboard takes roughly 1 second to render on the server.
@@ -361,9 +367,8 @@ bool WeatherDisplay::downloadDashboard() {
     if (httpCode != HTTP_CODE_OK) {
         char statusMsg[64];
         snprintf(statusMsg, sizeof(statusMsg), "Dashboard download failed: %d", httpCode);
-        displayStatus(statusMsg);
         http.end();
-        return false;
+        return statusMsg;
     }
 
     // Read PBM header
@@ -374,9 +379,8 @@ bool WeatherDisplay::downloadDashboard() {
     
     // Verify PBM magic number
     if (strncmp(header, "P4", 2) != 0) {
-        displayStatus("Invalid PBM format");
         http.end();
-        return false;
+        return "Invalid PBM format";
     }
 
     // Skip comments
@@ -389,18 +393,16 @@ bool WeatherDisplay::downloadDashboard() {
     // Parse dimensions
     int width, height;
     if (sscanf(header, "%d %d", &width, &height) != 2) {
-        displayStatus("Invalid PBM dimensions");
         http.end();
-        return false;
+        return "Invalid PBM dimensions";
     }
 
     // Verify dimensions match expected size
     if (width != display_.width() || height != display_.height()) {
         char statusMsg[64];
         snprintf(statusMsg, sizeof(statusMsg), "Invalid size: %dx%d", width, height);
-        displayStatus(statusMsg);
         http.end();
-        return false;
+        return statusMsg;
     }
 
     // Calculate expected size (PBM is 1 bit per pixel, packed into bytes)
@@ -413,9 +415,8 @@ bool WeatherDisplay::downloadDashboard() {
         }
         dashboardBuffer_ = (uint8_t*)malloc(expectedSize);
         if (dashboardBuffer_ == nullptr) {
-            displayStatus("Memory allocation failed");
             http.end();
-            return false;
+            return "Memory allocation failed";
         }
         dashboardBufferSize_ = expectedSize;
     }
@@ -424,9 +425,8 @@ bool WeatherDisplay::downloadDashboard() {
     size_t bytesRead = 0;
     while (bytesRead < expectedSize) {
         if (!stream->connected()) {
-            displayStatus("Stream disconnected");
             http.end();
-            return false;
+            return "Stream disconnected";
         }
         size_t available = stream->available();
         if (available) {
@@ -440,10 +440,9 @@ bool WeatherDisplay::downloadDashboard() {
     http.end();
 
     if (bytesRead != expectedSize) {
-        displayStatus("Invalid PBM size");
-        return false;
+        return "Invalid PBM size";
     }
-    return true;
+    return "";
 }
 
 bool WeatherDisplay::checkForDashboardChange() {
