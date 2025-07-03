@@ -1,6 +1,6 @@
 # Weather Display
 
-![e-ink display attached to esp showing weather and temperature information](docs/display.jpg)
+![e-ink display in a 3d-printed case showing weather and temperature information](docs/case.jpg)
 
 A weather display system consisting of a server component and a display component. This project allows you to display weather and temperature information on an e-ink display.
 
@@ -14,10 +14,13 @@ The e-ink display periodically queries that dashboard and displays it.
 - GooDisplay 4.26inch E-ink-Display 800x480 GDEQ0426T82 (Black/White) - https://eckstein-shop.de/GooDisplay-426inch-E-ink-Display-800x480-SPI-E-Paper-GDEQ0426T82 . This is identical to https://www.seeedstudio.com/4-26-Monochrome-SPI-ePaper-Display-p-6398.html .
 - Some USB-C power supply
 
+![e-ink display attached to esp showing weather and temperature information](docs/display.jpg)
+
 ## Project Structure
 
-- `server/` - Backend server component that handles weather data processing and API integration
+- `case/` - A cardboard and a 3d-printable case for the weather display
 - `display/` - Display component that shows the weather information
+- `server/` - Backend server component that handles weather data processing and API integration
 
 ## Setup
 
