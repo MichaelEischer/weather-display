@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   sodipodi:docname="cardboard.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="2.9228667"
+     inkscape:cx="528.59065"
+     inkscape:cy="218.27886"
+     inkscape:window-width="2560"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer4">
+    <inkscape:grid
+       id="grid1"
+       units="mm"
+       originx="0"
+       originy="0"
+       spacingx="0.99999998"
+       spacingy="1"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       enabled="true"
+       visible="true" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1">
+    <marker
+       style="overflow:visible"
+       id="Triangle"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Triangle arrow"
+       markerWidth="1"
+       markerHeight="1"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135" />
+    </marker>
+  </defs>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Schnittlinien">
+    <path
+       style="fill:none;stroke:#ef1b1b;stroke-width:0.317;stroke-dasharray:none;stroke-opacity:1"
+       d="M 2.0000006,94.999997 V 44.999999 h 33.0000004 -10 V 12 h 10 V 2.0000007 H 100 V 12 h 10 V 44.999999 H 100 208 V 94.999997 H 100 118 V 105 h 7 v 39.99999 l -25,-17 V 143 H 35.000001 v -15.00001 l -25,17 V 105 h 7 V 94.999997 l 18,1e-6 z"
+       id="path17"
+       sodipodi:nodetypes="ccccccccccccccccccccccccccccc" />
+    <path
+       style="fill:none;stroke:#ef1b1b;stroke-width:0.317;stroke-dasharray:none;stroke-opacity:1"
+       d="m 62.000002,13 h 10.999999 v 4 H 62.000002 Z"
+       id="path15" />
+    <path
+       style="fill:none;stroke:#ef1b1b;stroke-width:0.317;stroke-dasharray:none;stroke-opacity:1"
+       d="m 36.000001,79.999998 h 63 v -1 h -63 z"
+       id="path14" />
+    <path
+       style="fill:none;stroke:#ef1b1b;stroke-width:0.317;stroke-dasharray:none;stroke-opacity:1"
+       d="m 115,43.999999 h 90 V 15 h -90 z"
+       id="path16" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Faltmarken">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 35.000001,44.999999 V 12 H 100 V 44.999999 127.99999 H 35.000001 Z"
+       id="path18" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 35.000001,94.999997 H 100"
+       id="path19" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 133,44.999999 V 94.999997"
+       id="path20" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 198,44.999999 V 94.999997"
+       id="path21" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:1.268, 1.268;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 10.000001,127.99999 h 25"
+       id="path22" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:1.268, 1.268;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 100,127.99999 h 25"
+       id="path23" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 35.000001,44.999999 H 100"
+       id="path24" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 135,15 V 43.999999"
+       id="path25" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 155.94253,15 0.0905,28.999999"
+       id="path26" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 183,15 V 43.999999"
+       id="path27" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="Legende">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:0.317, 0.634, 0.317, 0.634, 1.268, 0.634;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 134.8052,115.04793 h 10"
+       id="path28" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.317;stroke-dasharray:1.268, 1.268;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 134.8052,120.04793 h 10"
+       id="path29"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#ef1b1b;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 134.8052,125.04793 h 10"
+       id="path30"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="146.80519"
+       y="127.04792"
+       id="text30"><tspan
+         sodipodi:role="line"
+         id="tspan30"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317"
+         x="146.80519"
+         y="127.04792">Schnittkante</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="146.80519"
+       y="122.04792"
+       id="text31"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.317"
+         x="146.80519"
+         y="122.04792"
+         id="tspan32">Talfalte</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="146.84752"
+       y="116.81846"
+       id="text33"><tspan
+         sodipodi:role="line"
+         id="tspan33"
+         style="stroke-width:0.317"
+         x="146.84752"
+         y="116.81846">Bergfalte</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="3.7326939"
+       y="69.999992"
+       id="text34"><tspan
+         sodipodi:role="line"
+         id="tspan34"
+         style="stroke-width:0.317"
+         x="3.7326939"
+         y="69.999992">1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="-91.381737"
+       y="204.21733"
+       id="text35"
+       transform="rotate(-90)"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.317"
+         x="-91.381737"
+         y="204.21733"
+         id="tspan36">Innen an 1 ankleben</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="50.589367"
+       y="75.217331"
+       id="text37"><tspan
+         sodipodi:role="line"
+         id="tspan37"
+         style="stroke-width:0.317"
+         x="50.589367"
+         y="75.217331">Displayausschnitt</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="53.41571"
+       y="22.806175"
+       id="text38"><tspan
+         sodipodi:role="line"
+         id="tspan38"
+         style="stroke-width:0.317"
+         x="53.41571"
+         y="22.806175">USB-C-Buchse</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       x="122"
+       y="100.99999"
+       id="text39"><tspan
+         sodipodi:role="line"
+         id="tspan39"
+         style="stroke-width:0.317"
+         x="122"
+         y="100.99999">Kante zum Display halten</tspan></text>
+    <path
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.317;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#Triangle)"
+       d="m 122,101 -3,3"
+       id="path39" />
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;stroke:none;stroke-width:0.317;fill-opacity:1"
+       x="159.04691"
+       y="29.5"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         style="stroke-width:0.317;fill:#000000;fill-opacity:1;stroke:none"
+         x="159.04691"
+         y="29.5">Abstandshalter</tspan></text>
+  </g>
+</svg>
