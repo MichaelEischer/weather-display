@@ -125,8 +125,11 @@ async function processSensorData(sensorData: SensorData[]): Promise<DashboardDat
   const temperatureSensors: TemperatureSensorsMap = relevantSensors
     .filter(s => s.entity_id.startsWith('sensor.temperatur_'))
     .reduce((acc, sensor) => {
-      const location = sensor.entity_id.split('_')[1];
-      const type = sensor.entity_id.split('_')[2];
+      // pattern: sensor.temperatur_<name>_temperature
+      const firstUnderscore = sensor.entity_id.indexOf('_')+1;
+      const lastUnderscore = sensor.entity_id.lastIndexOf('_');
+      const location = sensor.entity_id.substring(firstUnderscore, firstUnderscore + lastUnderscore); // e.g., "balkon"
+      const type = sensor.entity_id.substring(firstUnderscore + lastUnderscore + 1);    // e.g., "temperature"
       
       if (!acc[location]) {
         acc[location] = {
