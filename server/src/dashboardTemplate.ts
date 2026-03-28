@@ -322,8 +322,8 @@ function generateHtml(data: DashboardData): string {
             --font-size-small: 20px;
             --font-size-medium: 26px;
             --font-size-large: 32px;
-            --font-size-xxlarge: 40px;
-            --font-size-huge: 60px;
+            --font-size-xxlarge: 36px;
+            --font-size-huge: 56px;
             --spacing-small: 5px;
             --spacing-medium: 8px;
             --spacing-xlarge: 15px;
@@ -335,7 +335,7 @@ function generateHtml(data: DashboardData): string {
             margin: 0;
             font-family: sans-serif;
             background-color: white;
-            padding: var(--spacing-xlarge);
+            padding: var(--spacing-small) var(--spacing-xlarge);
             box-sizing: border-box;
           }
 
@@ -369,7 +369,7 @@ function generateHtml(data: DashboardData): string {
 
           .room {
             background-color: white;
-            padding: var(--spacing-medium) 0;
+            padding: var(--spacing-small) 0;
             border-bottom: 2px solid var(--primary-color);
           }
 
@@ -382,6 +382,7 @@ function generateHtml(data: DashboardData): string {
             font-weight: bold;
             color: var(--primary-color);
             text-align: center;
+            margin-bottom: -12px;
           }
 
           .sensor-row {
