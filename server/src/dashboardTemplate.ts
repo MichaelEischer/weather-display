@@ -370,7 +370,7 @@ function generateHtml(data: DashboardData): string {
 
           .room {
             background-color: white;
-            padding: var(--spacing-small) 0;
+            padding: 2px 0;
             border-bottom: 2px solid var(--primary-color);
           }
 
