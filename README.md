@@ -59,6 +59,8 @@ docker compose up -d
 cd display
 # enter shell with idf.py
 ~/esp/v5.4.1/esp-idf/tools/activate.py
+# pick right target if necessary
+# idf.py set-target esp32c6
 idf.py build
 idf.py -p /dev/ttyACM0 flash
 ```
@@ -85,3 +87,15 @@ Contributions are welcome! Please feel free to submit a Pull Request. However, I
 ## License
 
 This project is licensed under the GPL License - see the LICENSE file for details.
+
+## Zigbee Repeater
+
+Flash an esp32c6 as zigbee repeater:
+
+```
+git clone https://github.com/espressif/esp-zigbee-sdk.git
+cd esp-zigbee-sdk/tree/main/examples/esp_zigbee_HA_sample/HA_color_dimmable_light
+~/esp/v5.4.1/esp-idf/tools/activate.py
+idf.py set-target esp32c6
+idf.py -p /dev/ttyACM0 flash
+```
