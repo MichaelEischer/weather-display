@@ -41,12 +41,19 @@ const OTHER_SENSORS = {
 async function fetchDisplayDeviceDescriptor(): Promise<DisplayDeviceDescriptor[]> {
   const templateBody = `
 [
-{%- for dev in label_devices('Display') %}
+{%- set sep = namespace(first=true) %}
+{%- for area_id in areas() %}
+  {%- for dev in label_devices('Display') %}
+    {%- if device_attr(dev, 'area_id') == area_id %}
+      {%- if not sep.first %},{% endif %}
+      {%- set sep.first = false %}
   {
     "device_id": {{ dev | to_json }},
     "name": {{ (area_name(dev) or device_attr(dev, 'name_by_user') or device_attr(dev, 'name') or dev) | to_json }},
     "entities": {{ device_entities(dev) | select('match', '^sensor\\.') | list | to_json }}
-  }{% if not loop.last %},{% endif %}
+  }
+    {%- endif %}
+  {%- endfor %}
 {%- endfor %}
 ]
 `.trim();
@@ -58,13 +65,7 @@ async function fetchDisplayDeviceDescriptor(): Promise<DisplayDeviceDescriptor[]
       'Content-Type': 'application/json'
     };
     const { data } = await axios.post<DisplayDeviceDescriptor[]>(url, { template: templateBody }, { headers });
-    if (!Array.isArray(data)) {
-      return [];
-    }
-    return data.map(device => ({
-      ...device,
-      entities: (device.entities ?? []).filter(entityId => entityId.startsWith('sensor.'))
-    }));
+    return Array.isArray(data) ? data : [];
   } catch (e) {
     console.error('fetchDisplayDevicePlan: failed to fetch or decode template response', e);
     return [];

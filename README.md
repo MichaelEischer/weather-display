@@ -6,6 +6,7 @@ A weather display system consisting of a server component and a display componen
 
 The server component connects to a Home Assistant instance and retrieves data from there. This information is used to build an html dashboard, which gets rendered into a portable bitmap.
 The e-ink display periodically queries that dashboard and displays it.
+The dashboard lists temperature sensors that are labelled with "Display" in the order of their areas.
 
 ## Part List
 
