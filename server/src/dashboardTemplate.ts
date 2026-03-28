@@ -222,10 +222,10 @@ function renderRoomSection(location: string, sensors: TemperatureSensor): string
         ${sensors.battery !== undefined ? `
           <span class="sensor-value-small">
             ${(() => {
-              if (sensors.battery! >= 90) return '<i class="fas fa-battery-full"></i>';
-              if (sensors.battery! >= 70) return '<i class="fas fa-battery-three-quarters"></i>';
-              if (sensors.battery! >= 40) return '<i class="fas fa-battery-half"></i>';
-              if (sensors.battery! >= 20) return '<i class="fas fa-battery-quarter"></i>';
+              if (sensors.battery! >= 87) return '<i class="fas fa-battery-full"></i>';
+              if (sensors.battery! >= 63) return '<i class="fas fa-battery-three-quarters"></i>';
+              if (sensors.battery! >= 37) return '<i class="fas fa-battery-half"></i>';
+              if (sensors.battery! >= 12) return '<i class="fas fa-battery-quarter"></i>';
               return '<i class="fas fa-battery-empty"></i>';
             })()}
           </span>
