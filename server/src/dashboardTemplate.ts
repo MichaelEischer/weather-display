@@ -194,11 +194,11 @@ function getWeatherIcon(weatherState: string): string {
     'pouring': 'fa-cloud-showers-heavy',
     'rainy': 'fa-cloud-rain',
     'snowy': 'fa-snowflake',
-    'snowy-rainy': 'fa-cloud-snow',
+    'snowy-rainy': 'fa-cloud-rain', // fa-cloud-snow would actually be a better fit, but is only available in pro version of fontawesome
     'sunny': 'fa-sun',
     'windy': 'fa-wind',
     'windy-variant': 'fa-wind',
-    'exceptional': 'fa-exclamation-triangle',
+    'exceptional': 'fa-triangle-exclamation',
     'unknown': 'fa-question'
   };
 
