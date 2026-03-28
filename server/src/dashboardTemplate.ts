@@ -3,15 +3,23 @@ import axios from 'axios';
 interface SensorData {
   entity_id: string;
   state: string;
+  attributes?: Record<string, unknown>;
 }
 
 interface TemperatureSensor {
+  title: string;
   temperature: number;
   humidity: number;
   battery?: number;
   min: number;
   max: number;
   dewPoint: number;
+}
+
+interface DisplayDeviceDescriptor {
+  device_id: string;
+  name: string;
+  entities: string[];
 }
 
 type TemperatureSensorsMap = { [location: string]: TemperatureSensor };
@@ -23,30 +31,87 @@ interface DashboardData {
   temperatureSensors: TemperatureSensorsMap;
 }
 
-type SensorType = 'temperature' | 'humidity' | 'battery';
-
-const SENSOR_CONFIGS = Object.fromEntries(
-  ['wohnzimmer', 'bad', 'balkon'].map(location => [
-    location,
-    {
-      temperature: `sensor.temperatur_${location}_temperature`,
-      humidity: `sensor.temperatur_${location}_humidity`,
-      battery: `sensor.temperatur_${location}_battery`
-    }
-  ])
-) as Record<string, Record<SensorType, string>>;
-
 const OTHER_SENSORS = {
   weather: 'weather.forecast_home',
   sunrise: 'sensor.sun_next_rising',
   sunset: 'sensor.sun_next_dusk'
 } as const;
 
-function getRelevantSensorIds(): Set<string> {
-  return new Set([
-    ...Object.values(SENSOR_CONFIGS).flatMap(config => Object.values(config)),
-    ...Object.values(OTHER_SENSORS)
-  ]);
+/** Devices (and their entities) that carry the dashboard label, via HA template API. */
+async function fetchDisplayDeviceDescriptor(): Promise<DisplayDeviceDescriptor[]> {
+  const templateBody = `
+[
+{%- for dev in label_devices('Display') %}
+  {
+    "device_id": {{ dev | to_json }},
+    "name": {{ (area_name(dev) or device_attr(dev, 'name_by_user') or device_attr(dev, 'name') or dev) | to_json }},
+    "entities": {{ device_entities(dev) | select('match', '^sensor\\.') | list | to_json }}
+  }{% if not loop.last %},{% endif %}
+{%- endfor %}
+]
+`.trim();
+
+  try {
+    const url = `${process.env.HA_URL}/api/template`;
+    const headers = {
+      Authorization: `Bearer ${process.env.HA_TOKEN}`,
+      'Content-Type': 'application/json'
+    };
+    const { data } = await axios.post<DisplayDeviceDescriptor[]>(url, { template: templateBody }, { headers });
+    if (!Array.isArray(data)) {
+      return [];
+    }
+    return data.map(device => ({
+      ...device,
+      entities: (device.entities ?? []).filter(entityId => entityId.startsWith('sensor.'))
+    }));
+  } catch (e) {
+    console.error('fetchDisplayDevicePlan: failed to fetch or decode template response', e);
+    return [];
+  }
+}
+
+function getRelevantSensorIds(displayPlan: DisplayDeviceDescriptor[]): Set<string> {
+  const fromDevices = displayPlan.flatMap(d => d.entities);
+  return new Set([...fromDevices, ...Object.values(OTHER_SENSORS)]);
+}
+
+function sensorRole(state: SensorData | undefined): 'temperature' | 'humidity' | 'battery' | null {
+  if (!state || !state.entity_id.startsWith('sensor.')) {
+    return null;
+  }
+  const dc = state.attributes?.device_class;
+  if (dc == null || dc === '') {
+    return null;
+  }
+  switch (dc) {
+    case 'temperature':
+      return 'temperature';
+    case 'humidity':
+      return 'humidity';
+    case 'battery':
+      return 'battery';
+    default:
+      return null;
+  }
+}
+
+function pickLabeledSensorEntityIds(
+  device: DisplayDeviceDescriptor,
+  stateByEntity: Map<string, SensorData>
+): { temperature?: string; humidity?: string; battery?: string } {
+  const ids: { temperature?: string; humidity?: string; battery?: string } = {};
+  for (const entityId of device.entities) {
+    const role = sensorRole(stateByEntity.get(entityId));
+    if (role === 'temperature' && !ids.temperature) {
+      ids.temperature = entityId;
+    } else if (role === 'humidity' && !ids.humidity) {
+      ids.humidity = entityId;
+    } else if (role === 'battery' && !ids.battery) {
+      ids.battery = entityId;
+    }
+  }
+  return ids;
 }
 
 // Data processing functions
@@ -115,65 +180,71 @@ async function fetchSensorData(): Promise<SensorData[]> {
   return response.data;
 }
 
-async function processSensorData(sensorData: SensorData[]): Promise<DashboardData> {
-  const relevantSensors = sensorData.filter(s => getRelevantSensorIds().has(s.entity_id));
+async function processSensorData(
+  sensorData: SensorData[],
+  deviceDescriptors: DisplayDeviceDescriptor[]
+): Promise<DashboardData> {
+  const stateByEntity = new Map(sensorData.map(s => [s.entity_id, s]));
+  const relevantSensors = sensorData.filter(s => getRelevantSensorIds(deviceDescriptors).has(s.entity_id));
 
   const weatherSensor = relevantSensors.find(s => s.entity_id === OTHER_SENSORS.weather);
   const sunriseSensor = relevantSensors.find(s => s.entity_id === OTHER_SENSORS.sunrise);
   const sunsetSensor = relevantSensors.find(s => s.entity_id === OTHER_SENSORS.sunset);
 
-  const temperatureSensors: TemperatureSensorsMap = relevantSensors
-    .filter(s => s.entity_id.startsWith('sensor.temperatur_'))
-    .reduce((acc, sensor) => {
-      // pattern: sensor.temperatur_<name>_temperature
-      const firstUnderscore = sensor.entity_id.indexOf('_')+1;
-      const lastUnderscore = sensor.entity_id.lastIndexOf('_');
-      const location = sensor.entity_id.substring(firstUnderscore, firstUnderscore + lastUnderscore); // e.g., "balkon"
-      const type = sensor.entity_id.substring(firstUnderscore + lastUnderscore + 1);    // e.g., "temperature"
-      
-      if (!acc[location]) {
-        acc[location] = {
-          temperature: 0,
-          humidity: 0,
-          min: 0,
-          max: 0,
-          dewPoint: 0
-        };
+  const temperatureSensors: TemperatureSensorsMap = {};
+
+  for (const device of deviceDescriptors) {
+    const { temperature: temperatureEntityId, humidity: humidityEntityId, battery: batteryEntityId } =
+      pickLabeledSensorEntityIds(device, stateByEntity);
+
+    if (!temperatureEntityId) {
+      continue;
+    }
+
+    const title = device.name || device.device_id;
+    const key = device.device_id;
+    const tempState = stateByEntity.get(temperatureEntityId);
+    const humState = humidityEntityId ? stateByEntity.get(humidityEntityId) : undefined;
+    const batState = batteryEntityId ? stateByEntity.get(batteryEntityId) : undefined;
+
+    temperatureSensors[key] = {
+      title,
+      temperature: parseFloat(tempState?.state ?? 'NaN'),
+      humidity: humState ? parseFloat(humState.state) : 0,
+      dewPoint: 0,
+      min: 0,
+      max: 0
+    };
+    if (batState !== undefined && batState.state !== 'unavailable' && batState.state !== 'unknown') {
+      const b = parseInt(batState.state, 10);
+      if (!Number.isNaN(b)) {
+        temperatureSensors[key].battery = b;
       }
+    }
+  }
 
-      switch (type) {
-        case 'temperature':
-          acc[location].temperature = parseFloat(sensor.state);
-          break;
-        case 'humidity':
-          acc[location].humidity = parseFloat(sensor.state);
-          break;
-        case 'battery':
-          acc[location].battery = parseInt(sensor.state);
-          break;
-      }
-
-      return acc;
-    }, {} as TemperatureSensorsMap);
-
-  // Calculate dew points for all sensors
   Object.values(temperatureSensors).forEach(sensor => {
     sensor.dewPoint = calculateDewPoint(sensor.temperature, sensor.humidity);
   });
 
-  // Fetch statistics for all temperature sensors
   const temperatureStats = await Promise.all(
-    Object.keys(temperatureSensors).map(async (location) => {
-      const sensorId = SENSOR_CONFIGS[location].temperature;
-      const minMax = await fetchSensorStatistics(sensorId);
-      return { location, minMax };
-    })
+    deviceDescriptors
+      .filter(d => temperatureSensors[d.device_id])
+      .map(async device => {
+        const temperatureEntityId = pickLabeledSensorEntityIds(device, stateByEntity).temperature;
+        if (!temperatureEntityId) {
+          return { deviceId: device.device_id, minMax: { min: 0, max: 0 } };
+        }
+        const minMax = await fetchSensorStatistics(temperatureEntityId);
+        return { deviceId: device.device_id, minMax };
+      })
   );
 
-  // Inject statistics into temperatureSensors
-  temperatureStats.forEach(({ location, minMax }) => {
-    temperatureSensors[location].min = minMax.min;
-    temperatureSensors[location].max = minMax.max;
+  temperatureStats.forEach(({ deviceId, minMax }) => {
+    if (temperatureSensors[deviceId]) {
+      temperatureSensors[deviceId].min = minMax.min;
+      temperatureSensors[deviceId].max = minMax.max;
+    }
   });
 
   return {
@@ -208,10 +279,10 @@ function getWeatherIcon(weatherState: string): string {
   return weatherIcons[weatherState] || weatherIcons['unknown'];
 }
 
-function renderRoomSection(location: string, sensors: TemperatureSensor): string {
+function renderRoomSection(sensors: TemperatureSensor): string {
   return `
     <div class="room">
-      <div class="room-title">${location.charAt(0).toUpperCase() + location.slice(1)}</div>
+      <div class="room-title">${sensors.title}</div>
       <div class="sensor-row">
         <span class="sensor-value"><i class="fas fa-temperature-three-quarters sensor-icon"></i>${sensors.temperature.toFixed(1)}°C</span>
         <span class="sensor-value"><i class="fas fa-droplet sensor-icon"></i>${sensors.humidity.toFixed(1)}%</span>
@@ -361,16 +432,15 @@ function generateHtml(data: DashboardData): string {
           ` : ''}
           </div>
         </div>
-        ${Object.entries(data.temperatureSensors).map(([location, sensors]) => 
-          renderRoomSection(location, sensors)
-        ).join('')}
+        ${Object.values(data.temperatureSensors).map(sensors => renderRoomSection(sensors)).join('')}
       </body>
     </html>
   `;
 }
 
 export async function renderDashboardHtml(): Promise<string> {
+  const displayPlan = await fetchDisplayDeviceDescriptor();
   const sensorData = await fetchSensorData();
-  const data = await processSensorData(sensorData);
+  const data = await processSensorData(sensorData, displayPlan);
   return generateHtml(data);
 }
