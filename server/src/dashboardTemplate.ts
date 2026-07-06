@@ -1,4 +1,5 @@
 import axios from 'axios';
+import escapeHtml from 'escape-html';
 
 interface SensorData {
   entity_id: string;
@@ -283,7 +284,7 @@ function getWeatherIcon(weatherState: string): string {
 function renderRoomSection(sensors: TemperatureSensor): string {
   return `
     <div class="room">
-      <div class="room-title">${sensors.title}</div>
+      <div class="room-title">${escapeHtml(sensors.title)}</div>
       <div class="sensor-row">
         <span class="sensor-value"><i class="fas fa-temperature-three-quarters sensor-icon"></i>${sensors.temperature.toFixed(1)}°C</span>
         <span class="sensor-value"><i class="fas fa-droplet sensor-icon"></i>${sensors.humidity.toFixed(1)}%</span>
@@ -424,11 +425,11 @@ function generateHtml(data: DashboardData): string {
             <div class="sun-times">
               <div class="sun-info">
                 <i class="fas fa-sun"></i>
-                ${formatLocalTime(data.sunriseTime)}
+                ${escapeHtml(formatLocalTime(data.sunriseTime))}
               </div>
               <div class="sun-info">
                 <i class="fas fa-moon"></i>
-                ${formatLocalTime(data.sunsetTime)}
+                ${escapeHtml(formatLocalTime(data.sunsetTime))}
               </div>
             </div>
           ` : ''}
