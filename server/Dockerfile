@@ -1,8 +1,5 @@
 FROM node:26-slim
 
-# FIXME remove once https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1141488 is fixed
-RUN sed -i 's/http:\/\/deb.debian.org\/debian-security/http:\/\/snapshot.debian.org\/archive\/debian-security\/20260705T000000Z/g' /etc/apt/sources.list.d/debian.sources
-
 # Install Chrome dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \
     chromium \
