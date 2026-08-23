@@ -80,6 +80,7 @@ private:
 
     esp_pm_lock_handle_t pm_lock_ = nullptr;
     int downloadErrors_ = -1; // -1 means first download
+    bool errorIsShown_ = false;
     uint8_t* dashboardBuffer_ = nullptr;
     size_t dashboardBufferSize_ = 0;
     uint32_t currentDashboardHash_ = 0;

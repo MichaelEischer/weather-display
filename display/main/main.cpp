@@ -332,11 +332,12 @@ void WeatherDisplay::fetchAndDisplayDashboard() {
     String status = downloadDashboard();
     // immediate retry to not show a transient error
     if (!status.isEmpty()) {
+        esp_task_wdt_reset();
         status = downloadDashboard();
     }
 
     if (status.isEmpty()) {
-        if (checkForDashboardChange()) {
+        if (checkForDashboardChange() || errorIsShown_) {
             displayDashboard();
             identicalDraws_ = 1;
         } else if (identicalDraws_ < 3) {
@@ -345,18 +346,20 @@ void WeatherDisplay::fetchAndDisplayDashboard() {
             identicalDraws_++;
         }
         downloadErrors_ = 0;
+        errorIsShown_ = false;
     } else {
-        downloadErrors_++;
         if (downloadErrors_ > 5) {
             // restart ESP if downloads continue to fail
             // this is essentially a workaround in case some internal state is corrupted
             ESP.restart();
         }
-        if (downloadErrors_ > 1 || downloadErrors_ == 0) {
+        if (downloadErrors_ > 0 || downloadErrors_ == -1) {
             // only show the error message if it's the second time to not disrupt the display on transient errors
-            // or the display is just starting up
+            // or immediately if the display is just starting up
             displayStatus(status.c_str());
+            errorIsShown_ = true;
         }
+        downloadErrors_++;
     }
 
     esp_pm_lock_release(pm_lock_);
