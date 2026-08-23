@@ -366,7 +366,12 @@ String WeatherDisplay::downloadDashboard() {
     int httpCode = http.GET();
     if (httpCode != HTTP_CODE_OK) {
         char statusMsg[64];
-        snprintf(statusMsg, sizeof(statusMsg), "Dashboard download failed: %d", httpCode);
+        if (httpCode < 0) {
+            snprintf(statusMsg, sizeof(statusMsg), "Dashboard download failed: %s",
+                     HTTPClient::errorToString(httpCode).c_str());
+        } else {
+            snprintf(statusMsg, sizeof(statusMsg), "Dashboard download failed: %d", httpCode);
+        }
         http.end();
         return statusMsg;
     }
@@ -376,7 +381,7 @@ String WeatherDisplay::downloadDashboard() {
     char header[64];
     size_t headerLen = stream->readBytesUntil('\n', header, sizeof(header) - 1);
     header[headerLen] = '\0';
-    
+
     // Verify PBM magic number
     if (strncmp(header, "P4", 2) != 0) {
         http.end();
@@ -405,8 +410,8 @@ String WeatherDisplay::downloadDashboard() {
         return statusMsg;
     }
 
-    // Calculate expected size (PBM is 1 bit per pixel, packed into bytes)
-    size_t expectedSize = (width * height + 7) / 8;
+    // PBM packs pixels row-wise, padding each row to a full byte
+    size_t expectedSize = static_cast<size_t>((width + 7) / 8) * static_cast<size_t>(height);
 
     // Allocate buffer for the PBM data
     if (dashboardBuffer_ == nullptr || dashboardBufferSize_ < expectedSize) {
@@ -421,27 +426,14 @@ String WeatherDisplay::downloadDashboard() {
         dashboardBufferSize_ = expectedSize;
     }
 
-    // Download the PBM data
-    size_t bytesRead = 0;
-    while (bytesRead < expectedSize) {
-        if (!stream->connected()) {
-            http.end();
-            return "Stream disconnected";
-        }
-        size_t available = stream->available();
-        if (available) {
-            size_t read = stream->readBytes(dashboardBuffer_ + bytesRead, available);
-            bytesRead += read;
-        } else {
-            delay(1);
-        }
-    }
-
-    http.end();
-
+    // readBytes drains the RX buffer first, then waits up to the HTTP timeout.
+    size_t bytesRead = stream->readBytes(dashboardBuffer_, expectedSize);
     if (bytesRead != expectedSize) {
-        return "Invalid PBM size";
+        const char *err = stream->connected() ? "Stream read timeout" : "Stream disconnected";
+        http.end();
+        return err;
     }
+    http.end();
     return "";
 }
 
