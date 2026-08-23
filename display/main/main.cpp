@@ -330,6 +330,11 @@ void WeatherDisplay::waitNextSecond() {
 void WeatherDisplay::fetchAndDisplayDashboard() {
     esp_pm_lock_acquire(pm_lock_);
     String status = downloadDashboard();
+    // immediate retry to not show a transient error
+    if (!status.isEmpty()) {
+        status = downloadDashboard();
+    }
+
     if (status.isEmpty()) {
         if (checkForDashboardChange()) {
             displayDashboard();
