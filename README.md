@@ -27,7 +27,7 @@ The dashboard lists temperature sensors that are labelled with "Display" in the 
 
 ### Prerequisites
 
-- VS Code (or similar) with installed ESP-IDF 5.4.1 from https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html#installation .
+- VS Code (or similar) with installed ESP-IDF 5.5.5 from https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html#installation .
 - Parts listed above
 - Home Assistant installation
 - Some device like a Raspberry Pi to run the server using a docker container. The guide expects that docker-compose is installed.
@@ -59,7 +59,7 @@ docker compose up -d
 ```bash
 cd display
 # enter shell with idf.py
-~/esp/v5.4.1/esp-idf/tools/activate.py
+source "/home/michael/.espressif/tools/activate_idf_v5.5.5.sh"
 # pick right target if necessary
 # idf.py set-target esp32c6
 idf.py build
