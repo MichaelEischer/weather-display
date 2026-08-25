@@ -1,6 +1,7 @@
 [submodule "display/components/arduino-esp32"]
 	path = display/components/arduino-esp32
 	url = https://github.com/espressif/arduino-esp32.git
+	branch = 3.3.11
 	shallow = true
 [submodule "display/components/Adafruit_BusIO"]
 	path = display/components/Adafruit_BusIO
