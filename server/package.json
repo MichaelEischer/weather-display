@@ -9,11 +9,10 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "nodemon": "^3.1.14",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
   },
   "scripts": {
-    "dev": "nodemon"
+    "dev": "tsx watch src/server.ts"
   }
 }
