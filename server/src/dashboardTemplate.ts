@@ -1,5 +1,4 @@
 import axios from 'axios';
-import escapeHtml from 'escape-html';
 
 interface SensorData {
   entity_id: string;
@@ -7,7 +6,7 @@ interface SensorData {
   attributes?: Record<string, unknown>;
 }
 
-interface TemperatureSensor {
+export interface TemperatureSensor {
   title: string;
   temperature: number;
   humidity: number;
@@ -25,7 +24,7 @@ interface DisplayDeviceDescriptor {
 
 type TemperatureSensorsMap = { [location: string]: TemperatureSensor };
 
-interface DashboardData {
+export interface DashboardData {
   weatherState: string;
   sunriseTime?: string;
   sunsetTime?: string;
@@ -156,25 +155,6 @@ function calculateDewPoint(temperature: number, humidity: number): number {
   return (b * alpha) / (a - alpha);
 }
 
-function formatLocalTime(isoString: string, timezone: string = 'Europe/Berlin'): string {
-  const date = new Date(isoString);
-  return date.toLocaleTimeString('de-DE', {
-    timeZone: timezone,
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-function getGermanDate(): string {
-  const now = new Date();
-  const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-  const months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-  const weekday = weekdays[now.getDay()];
-  const day = now.getDate();
-  const month = months[now.getMonth()];
-  return `${weekday}<br/>${day}. ${month}`;
-}
-
 async function fetchSensorData(): Promise<SensorData[]> {
   const url = `${process.env.HA_URL}/api/states`;
   const headers = { Authorization: `Bearer ${process.env.HA_TOKEN}` };
@@ -257,193 +237,8 @@ async function processSensorData(
   };
 }
 
-// Rendering functions
-function getWeatherIcon(weatherState: string): string {
-  const weatherIcons: { [key: string]: string } = {
-    'clear-night': 'fa-moon',
-    'cloudy': 'fa-cloud',
-    'fog': 'fa-smog',
-    'hail': 'fa-cloud-meatball',
-    'lightning': 'fa-bolt',
-    'lightning-rainy': 'fa-cloud-bolt',
-    'partlycloudy': 'fa-cloud-sun',
-    'pouring': 'fa-cloud-showers-heavy',
-    'rainy': 'fa-cloud-rain',
-    'snowy': 'fa-snowflake',
-    'snowy-rainy': 'fa-cloud-rain', // fa-cloud-snow would actually be a better fit, but is only available in pro version of fontawesome
-    'sunny': 'fa-sun',
-    'windy': 'fa-wind',
-    'windy-variant': 'fa-wind',
-    'exceptional': 'fa-triangle-exclamation',
-    'unknown': 'fa-question'
-  };
-
-  return weatherIcons[weatherState] || weatherIcons['unknown'];
-}
-
-function renderRoomSection(sensors: TemperatureSensor): string {
-  return `
-    <div class="room">
-      <div class="room-title">${escapeHtml(sensors.title)}</div>
-      <div class="sensor-row">
-        <span class="sensor-value"><i class="fas fa-temperature-three-quarters sensor-icon"></i>${sensors.temperature.toFixed(1)}°C</span>
-        <span class="sensor-value"><i class="fas fa-droplet sensor-icon"></i>${sensors.humidity.toFixed(1)}%</span>
-      </div>
-      <div class="sensor-row">
-        <span class="sensor-value-small"><i class="fas fa-water"></i>${sensors.dewPoint.toFixed(1)}°C</span>
-        <span class="sensor-value-small">
-          <i class="fas fa-arrow-down"></i>${sensors.min.toFixed(1)}°C
-          <i class="fas fa-arrow-up"></i>${sensors.max.toFixed(1)}°C
-        </span>
-        ${sensors.battery !== undefined ? `
-          <span class="sensor-value-small">
-            ${(() => {
-              if (sensors.battery! >= 87) return '<i class="fas fa-battery-full"></i>';
-              if (sensors.battery! >= 63) return '<i class="fas fa-battery-three-quarters"></i>';
-              if (sensors.battery! >= 37) return '<i class="fas fa-battery-half"></i>';
-              if (sensors.battery! >= 12) return '<i class="fas fa-battery-quarter"></i>';
-              return '<i class="fas fa-battery-empty"></i>';
-            })()}
-          </span>
-        ` : ''}
-      </div>
-    </div>
-  `;
-}
-
-function generateHtml(data: DashboardData): string {
-  const weatherIcon = getWeatherIcon(data.weatherState);
-  
-  return `
-    <html>
-      <head>
-        <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
-        <style>
-          :root {
-            --primary-color: black;
-            --font-size-small: 20px;
-            --font-size-medium: 26px;
-            --font-size-large: 32px;
-            --font-size-xxlarge: 36px;
-            --font-size-huge: 56px;
-            --spacing-small: 5px;
-            --spacing-medium: 8px;
-            --spacing-xlarge: 15px;
-          }
-
-          body { 
-            width: 480px;
-            height: 800px;
-            margin: 0;
-            font-family: sans-serif;
-            background-color: white;
-            padding: var(--spacing-small) var(--spacing-xlarge);
-            box-sizing: border-box;
-          }
-
-          .weather-icon {
-            font-size: 100px;
-          }
-
-          .date {
-            font-size: var(--font-size-xxlarge);
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: var(--spacing-xlarge);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--spacing-xlarge);
-          }
-
-          .sun-times {
-            display: flex;
-            gap: var(--spacing-xlarge);
-            font-size: var(--font-size-large);
-            justify-content: space-evenly;
-          }
-
-          .sun-info {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-small);
-          }
-
-          .room {
-            background-color: white;
-            padding: 2px 0;
-            border-bottom: 2px solid var(--primary-color);
-          }
-
-          .room:last-child {
-            border-bottom: none;
-          }
-
-          .room-title {
-            font-size: var(--font-size-xxlarge);
-            font-weight: bold;
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: -12px;
-          }
-
-          .sensor-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-
-          .sensor-value {
-            font-weight: bold;
-            color: var(--primary-color);
-            font-size: var(--font-size-huge);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-medium);
-          }
-
-          .sensor-icon {
-            font-size: 50%;
-          }
-
-          .sensor-value-small {
-            font-weight: bold;
-            color: var(--primary-color);
-            font-size: var(--font-size-medium);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-small);
-          }
-        </style>
-      </head>
-      <body>
-        <div class="date">
-          <i class="fas ${weatherIcon} weather-icon"></i>
-          <div>
-          ${getGermanDate()}
-          ${data.sunriseTime && data.sunsetTime ? `
-            <div class="sun-times">
-              <div class="sun-info">
-                <i class="fas fa-sun"></i>
-                ${escapeHtml(formatLocalTime(data.sunriseTime))}
-              </div>
-              <div class="sun-info">
-                <i class="fas fa-moon"></i>
-                ${escapeHtml(formatLocalTime(data.sunsetTime))}
-              </div>
-            </div>
-          ` : ''}
-          </div>
-        </div>
-        ${Object.values(data.temperatureSensors).map(sensors => renderRoomSection(sensors)).join('')}
-      </body>
-    </html>
-  `;
-}
-
-export async function renderDashboardHtml(): Promise<string> {
+export async function loadDashboardData(): Promise<DashboardData> {
   const displayPlan = await fetchDisplayDeviceDescriptor();
   const sensorData = await fetchSensorData();
-  const data = await processSensorData(sensorData, displayPlan);
-  return generateHtml(data);
+  return processSensorData(sensorData, displayPlan);
 }

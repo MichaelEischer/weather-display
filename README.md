@@ -4,7 +4,7 @@
 
 A weather display system consisting of a server component and a display component. This project allows you to display weather and temperature information on an e-ink display.
 
-The server component connects to a Home Assistant instance and retrieves data from there. This information is used to build an html dashboard, which gets rendered into a portable bitmap.
+The server component connects to a Home Assistant instance and retrieves data from there. This information is used to build an SVG dashboard, which gets rendered into a portable bitmap.
 The e-ink display periodically queries that dashboard and displays it.
 The dashboard lists temperature sensors that are labelled with "Display" in the order of their areas.
 
@@ -79,7 +79,7 @@ To develop using the ESP-IDF extension, you have to open ONLY the `display` subf
 won't work. Run the command `esp-idf: add vs code configuration folder` to generate the necessary configuration for VS code.
 
 To develop on the `server` code, switch to the `server` folder, setup npm using `npm install` and run `npm run dev` to start the development server.
-Visit http://localhost:3000/ for the web variant of the dashboard or go to http://localhost:3000/dashboard.png to get the image that is queried by the display.
+Visit http://localhost:3000/ for the SVG variant of the dashboard or go to http://localhost:3000/dashboard.png to get the image that is queried by the display.
 
 ## Contributing
 
