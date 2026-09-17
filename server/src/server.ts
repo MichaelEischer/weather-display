@@ -4,6 +4,7 @@ import puppeteer, { Browser } from 'puppeteer';
 import dotenv from 'dotenv';
 import { Jimp } from 'jimp';
 import { renderDashboardHtml } from './dashboardTemplate';
+import { singleFlight } from './singleFlight';
 
 dotenv.config();
 
@@ -109,10 +110,14 @@ function convertToPBM(image: any): Buffer {
   return buffer;
 }
 
+const getBlackWhiteDashboard = singleFlight(async () => {
+  const png = await getDashboardScreenshot();
+  return convertToBlackWhite(png);
+});
+
 // Binary endpoint
 app.get('/dashboard.pbm', async (req, res) => {
-  const png = await getDashboardScreenshot();
-  const image = await convertToBlackWhite(png);
+  const image = await getBlackWhiteDashboard();
   const pbm = convertToPBM(image);
 
   res.set('Content-Type', 'application/octet-stream');
@@ -121,8 +126,7 @@ app.get('/dashboard.pbm', async (req, res) => {
 
 // Black and white PNG endpoint
 app.get('/dashboard.png', async (req, res) => {
-  const png = await getDashboardScreenshot();
-  const image = await convertToBlackWhite(png);
+  const image = await getBlackWhiteDashboard();
   const buffer = await image.getBuffer('image/png');
 
   res.set('Content-Type', 'image/png');
